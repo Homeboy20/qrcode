@@ -6,14 +6,26 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
+# This is explicitly NOT an Angular application
+[build.environment]
+  NETLIFY_USE_ANGULAR = "false"
+  NETLIFY_USE_YARN = "false"
+
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/app_handler"
   status = 200
   force = true
 
+# Fallback to static index.html if functions are not available 
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 404
+
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block" 
+    X-XSS-Protection = "1; mode=block"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self' https://*.netlify.app;" 
