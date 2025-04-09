@@ -33,9 +33,18 @@
             color: white;
             text-decoration: none;
             border-radius: 4px;
+            margin-right: 10px;
         }
         .api-link:hover {
             background-color: #45a049;
+        }
+        .error {
+            color: #d9534f;
+            background-color: #f9f2f2;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            display: none;
         }
     </style>
 </head>
@@ -49,14 +58,48 @@
             <p><small>The serverless function is starting up, which may take a few seconds on cold starts.</small></p>
         </div>
         
-        <p>If you're not automatically redirected, please click the button below:</p>
-        <a href="/.netlify/functions/app_handler" class="api-link">Go to Application</a>
+        <p>If you're not automatically redirected, please click one of the buttons below:</p>
+        <div>
+            <a href="/.netlify/functions/app_handler" class="api-link">Python Handler</a>
+            <a href="/.netlify/functions/app_alt" class="api-link">JavaScript Proxy Handler</a>
+        </div>
+        
+        <div class="error" id="error-message">
+            <h3>Function not responding</h3>
+            <p>The serverless function may still be deploying or initializing. Please wait a few minutes and try again.</p>
+            <p>If the problem persists, check the Netlify logs for any deployment issues.</p>
+        </div>
     </div>
 
     <script>
-        // Redirect to the Flask app after a short delay
+        // Attempt to call the Python handler
         setTimeout(function() {
-            window.location.href = "/.netlify/functions/app_handler";
+            fetch('/.netlify/functions/app_handler')
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/.netlify/functions/app_handler';
+                    } else {
+                        throw new Error('Function not available');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error reaching Python handler, trying JS handler:', error);
+                    
+                    // Try the JS handler as a fallback
+                    fetch('/.netlify/functions/app_alt')
+                        .then(response => {
+                            if (response.ok) {
+                                window.location.href = '/.netlify/functions/app_alt';
+                            } else {
+                                throw new Error('Both handlers unavailable');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error reaching both handlers:', error);
+                            document.getElementById('error-message').style.display = 'block';
+                            document.querySelector('.loading').style.display = 'none';
+                        });
+                });
         }, 3000);
     </script>
 </body>

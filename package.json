@@ -1,7 +1,22 @@
 {
+  "name": "barcode-generator",
+  "version": "1.0.0",
+  "description": "Barcode and QR code generator application",
+  "main": "index.js",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "keywords": [
+    "barcode",
+    "qrcode",
+    "netlify",
+    "serverless"
+  ],
   "dependencies": {
-    "firebase": "^11.5.0",
-    "jsbarcode": "^3.11.6",
-    "qrcode-generator": "^1.4.4"
+    "@netlify/functions": "^1.6.0",
+    "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^15.0.0"
   }
 }

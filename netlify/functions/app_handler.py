@@ -37,4 +37,13 @@ def handler(event, context):
     """
     AWS Lambda / Netlify Function handler for the Flask app
     """
-    return handle_request(app, event, context) 
+    # Print debug information
+    print(f"Handler received event: {event}")
+    return handle_request(app, event, context)
+
+# Netlify specific function configuration
+handler.config = {
+    "runtime": "python3.9",
+    "memory": 1024,
+    "timeout": 10
+} 

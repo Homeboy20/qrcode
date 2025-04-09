@@ -1,11 +1,19 @@
 [build]
-  command = "pip install -r requirements.txt"
-  publish = "static"  # Using static folder as it already exists in the Flask project
+  command = "pip install -r netlify/functions/requirements.txt -t netlify/functions/"
+  publish = "static"
 
 [functions]
   directory = "netlify/functions"
+  node_bundler = "esbuild"
 
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/app_handler"
-  status = 200 
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block" 
