@@ -46,7 +46,17 @@
             margin-top: 20px;
             display: none;
         }
+        .app-info {
+            margin-top: 20px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+        }
     </style>
+    <!-- Load our JavaScript utilities first -->
+    <script src="/js/inpage-fix.js"></script>
+    <script src="/js/page_all.js"></script>
+    <script src="/js/operationBanner.js"></script>
 </head>
 <body>
     <div class="container">
@@ -58,10 +68,15 @@
             <p><small>The serverless function is starting up, which may take a few seconds on cold starts.</small></p>
         </div>
         
+        <div id="status" style="background-color: #e7f3ff; padding: 10px; border-radius: 4px; margin: 10px 0; display: none;"></div>
+        
         <p>If you're not automatically redirected, please click one of the buttons below:</p>
         <div>
             <a href="/.netlify/functions/app_handler" class="api-link">Python Handler</a>
             <a href="/.netlify/functions/app_alt" class="api-link">JavaScript Proxy Handler</a>
+            <a href="/.netlify/functions/debug_handler" class="api-link">Python Debug</a>
+            <a href="/.netlify/functions/debug" class="api-link">JS Debug</a>
+            <a href="/.netlify/functions/hello" class="api-link">Hello World</a>
         </div>
         
         <div class="error" id="error-message">
@@ -69,36 +84,95 @@
             <p>The serverless function may still be deploying or initializing. Please wait a few minutes and try again.</p>
             <p>If the problem persists, check the Netlify logs for any deployment issues.</p>
         </div>
+        
+        <div class="app-info">
+            <h3>About This Application</h3>
+            <p>This is a serverless application that generates barcodes and QR codes. It's built with:</p>
+            <ul>
+                <li>Frontend: HTML, CSS, JavaScript</li>
+                <li>Backend: Python (Flask) running as serverless functions</li>
+                <li>Hosting: Netlify</li>
+            </ul>
+            <p>If you're having trouble with the serverless functions, you can try running the application locally.</p>
+        </div>
     </div>
 
     <script>
-        // Attempt to call the Python handler
+        // Initialize with the page_all.js functions to fix console errors
+        if (typeof init === 'function') {
+            // Initialize required components
+            init('html', 'http://localhost:8888/');
+            init('clearCart', 'http://localhost:8888/');
+            init('getOrdersListProduct', 'http://localhost:8888/');
+            init('getTrackDetals', 'http://localhost:8888/');
+            init('getOrderDetail', 'http://localhost:8888/');
+            init('getReview', 'http://localhost:8888/');
+            init('clearAddres', 'http://localhost:8888/');
+            init('countAddress', 'http://localhost:8888/');
+        }
+        
+        // Attempt to call the JS debug handler first - most likely to work
         setTimeout(function() {
-            fetch('/.netlify/functions/app_handler')
+            fetch('/.netlify/functions/hello')
                 .then(response => {
                     if (response.ok) {
+                        console.log("Hello world handler is working!");
+                        const statusEl = document.getElementById('status');
+                        statusEl.style.display = 'block';
+                        statusEl.textContent = "Hello world handler is working! This confirms basic Netlify Functions are operational.";
+                        
+                        // Show success notification if operationBanner is loaded
+                        if (window.operationBanner) {
+                            window.operationBanner.showSuccess('Successfully connected to Netlify Functions');
+                        }
+                        
+                        // Try the JS debug handler
+                        return fetch('/.netlify/functions/debug');
+                    } else {
+                        throw new Error('Hello world handler not available');
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("JS debug handler is working!");
+                        const statusEl = document.getElementById('status');
+                        statusEl.style.display = 'block';
+                        statusEl.textContent = "JavaScript functions are working!";
+                        // Try the Python debug handler
+                        return fetch('/.netlify/functions/debug_handler');
+                    } else {
+                        throw new Error('JS debug handler not available');
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("Python debug handler is working!");
+                        const statusEl = document.getElementById('status');
+                        statusEl.style.display = 'block';
+                        statusEl.textContent = "Both JavaScript and Python functions are working!";
+                        // Try the main Python handler
+                        return fetch('/.netlify/functions/app_handler');
+                    } else {
+                        throw new Error('Python debug handler not available');
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("Main Python handler is working!");
                         window.location.href = '/.netlify/functions/app_handler';
                     } else {
-                        throw new Error('Function not available');
+                        throw new Error('Main Python handler not available');
                     }
                 })
                 .catch(error => {
-                    console.error('Error reaching Python handler, trying JS handler:', error);
+                    console.error('Error reaching handlers:', error);
+                    document.getElementById('error-message').style.display = 'block';
+                    document.querySelector('.loading').style.display = 'none';
                     
-                    // Try the JS handler as a fallback
-                    fetch('/.netlify/functions/app_alt')
-                        .then(response => {
-                            if (response.ok) {
-                                window.location.href = '/.netlify/functions/app_alt';
-                            } else {
-                                throw new Error('Both handlers unavailable');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error reaching both handlers:', error);
-                            document.getElementById('error-message').style.display = 'block';
-                            document.querySelector('.loading').style.display = 'none';
-                        });
+                    // Show error notification if operationBanner is loaded
+                    if (window.operationBanner) {
+                        window.operationBanner.showError('Failed to connect to serverless functions. Please try again later.');
+                    }
                 });
         }, 3000);
     </script>
