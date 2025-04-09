@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h1 {
+            color: #333;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .api-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .api-link:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Barcode Generator</h1>
+        <p>Welcome to the Barcode Generator application. This application allows you to generate various types of barcodes and QR codes.</p>
+        
+        <div class="loading">
+            <p>Loading application...</p>
+            <p><small>The serverless function is starting up, which may take a few seconds on cold starts.</small></p>
+        </div>
+        
+        <p>If you're not automatically redirected, please click the button below:</p>
+        <a href="/.netlify/functions/app_handler" class="api-link">Go to Application</a>
+    </div>
+
+    <script>
+        // Redirect to the Flask app after a short delay
+        setTimeout(function() {
+            window.location.href = "/.netlify/functions/app_handler";
+        }, 3000);
+    </script>
+</body>
+</html> 
