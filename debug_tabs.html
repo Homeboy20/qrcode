@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Tab Switching</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM loaded");
+            
+            // Track hash changes
+            window.addEventListener('hashchange', function() {
+                console.log("Hash changed to: " + window.location.hash);
+                handleHashChange();
+            });
+            
+            // Handle initial hash
+            if (window.location.hash) {
+                console.log("Initial hash: " + window.location.hash);
+                setTimeout(handleHashChange, 100); // Delay to ensure DOM is ready
+            }
+            
+            function handleHashChange() {
+                const hash = window.location.hash;
+                
+                // Remove 'active' class from all tabs
+                document.querySelectorAll('#tabs a').forEach(tab => {
+                    tab.classList.remove('active');
+                    console.log("Removed active from tab: " + tab.id);
+                });
+                
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.style.display = 'none';
+                    console.log("Hid content: " + content.id);
+                });
+                
+                // Find the tab corresponding to the hash
+                if (hash) {
+                    const targetId = hash.substring(1); // Remove the # symbol
+                    console.log("Target ID: " + targetId);
+                    
+                    // Add 'active' class to the selected tab
+                    const selectedTab = document.querySelector(`#tabs a[data-target='${targetId}']`);
+                    if (selectedTab) {
+                        selectedTab.classList.add('active');
+                        console.log("Added active to tab with data-target: " + targetId);
+                    }
+                    
+                    // Show the corresponding content
+                    const selectedContent = document.getElementById(targetId);
+                    if (selectedContent) {
+                        selectedContent.style.display = 'block';
+                        console.log("Showed content: " + targetId);
+                    }
+                }
+            }
+            
+            // Tab click handler
+            document.querySelectorAll('#tabs a').forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('data-target');
+                    console.log("Tab clicked with target: " + targetId);
+                    
+                    // Update the URL hash
+                    window.location.hash = targetId;
+                });
+            });
+        });
+    </script>
+    <style>
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+        }
+        .tab-content:first-of-type {
+            display: block;
+        }
+        #tabs {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #tabs a {
+            padding: 10px 15px;
+            margin-right: 5px;
+            background: #f0f0f0;
+            text-decoration: none;
+            color: #333;
+        }
+        #tabs a.active {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Tab Switching</h1>
+    
+    <ul id="tabs">
+        <li><a href="#tab1" data-target="tab1" class="active">Tab 1</a></li>
+        <li><a href="#tab2" data-target="tab2">Tab 2</a></li>
+        <li><a href="#tab3" data-target="tab3">Tab 3</a></li>
+    </ul>
+    
+    <div id="tab1" class="tab-content">
+        <h2>Tab 1 Content</h2>
+        <p>This is the content for Tab 1.</p>
+    </div>
+    
+    <div id="tab2" class="tab-content">
+        <h2>Tab 2 Content</h2>
+        <p>This is the content for Tab 2.</p>
+    </div>
+    
+    <div id="tab3" class="tab-content">
+        <h2>Tab 3 Content</h2>
+        <p>This is the content for Tab 3.</p>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <h3>Open Specific Tabs:</h3>
+        <a href="#tab1">Open Tab 1</a> |
+        <a href="#tab2">Open Tab 2</a> |
+        <a href="#tab3">Open Tab 3</a>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <h3>Console Output:</h3>
+        <pre id="console-output" style="background: #f5f5f5; padding: 10px; border: 1px solid #ddd;"></pre>
+    </div>
+    
+    <script>
+        // Capture console.log output
+        (function(){
+            const originalLog = console.log;
+            console.log = function() {
+                const output = document.getElementById('console-output');
+                if (output) {
+                    const args = Array.from(arguments);
+                    output.textContent += args.join(' ') + '\n';
+                }
+                originalLog.apply(console, arguments);
+            };
+        })();
+    </script>
+</body>
+</html> 

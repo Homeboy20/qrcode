@@ -1,0 +1,2887 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barcode & QR Code Generator</title>
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  
+  <!-- FontAwesome icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <!-- Application CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sequence-tab.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/themes.css') }}">
+  
+  <!-- JavaScript Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  
+  <style>
+    /* Custom styles that extend Tailwind */
+    .bg-gradient-primary {
+      background: linear-gradient(135deg, var(--tw-gradient-stops));
+      --tw-gradient-from: #3b82f6;
+      --tw-gradient-to: #60a5fa;
+      --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+    }
+    
+    /* Dark mode overrides */
+    .dark .dark\:bg-gray-900 {
+      background-color: #111827;
+    }
+    .dark .dark\:text-white {
+      color: #ffffff;
+    }
+    .dark .dark\:border-gray-700 {
+      border-color: #374151;
+    }
+    
+    /* Custom colors matching previous Tailwind config */
+    .text-primary-600 {
+      color: #2563eb;
+    }
+    .bg-primary-600 {
+      background-color: #2563eb;
+    }
+    .border-primary-600 {
+      border-color: #2563eb;
+    }
+    .hover\:bg-primary-700:hover {
+      background-color: #1d4ed8;
+    }
+    .focus\:ring-primary-500:focus {
+      --tw-ring-color: rgba(59, 130, 246, 0.5);
+    }
+    
+    .bg-secondary-50 {
+      background-color: #f0f9ff;
+    }
+    .bg-secondary-900 {
+      background-color: #0c4a6e;
+    }
+    .text-secondary-700 {
+      color: #0369a1;
+    }
+    .text-secondary-800 {
+      color: #075985;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col transition-colors duration-300" style="background-color: white;">
+
+  <!-- Dark Mode Toggle -->
+  <div class="fixed top-4 right-4 z-50">
+    <button id="theme-toggle"
+      class="p-3 bg-white dark:bg-gray-800 rounded-full shadow-md hover:shadow-xl transition-all 
+             focus:outline-none focus:ring-2 focus:ring-primary-400">
+      <i class="fas fa-sun text-yellow-500 dark:hidden"></i>
+      <i class="fas fa-moon text-blue-300 hidden dark:block"></i>
+    </button>
+  </div>
+
+  <!-- Header with Gradient -->
+  <header class="bg-gradient-to-r from-primary-600 to-secondary-600 
+                 animate-gradient bg-[length:200%_200%] text-white py-8 px-4 shadow-lg mb-8">
+    <div class="container mx-auto flex items-center justify-between">
+      <div class="flex items-center">
+      <div class="mr-4 animate-pulse-slow">
+          <i class="fas fa-barcode text-5xl text-blue-500"></i>
+      </div>
+        <h1 class="text-3xl md:text-4xl font-bold text-center text-blue-500">
+        Advanced Barcode Generator
+      </h1>
+      </div>
+      
+      <!-- Navigation Links -->
+      <nav class="hidden md:flex space-x-4">
+        <a href="/bulk_sequence_generator" class="text-white hover:text-blue-200 transition-colors">
+          <i class="fas fa-layer-group mr-1"></i> Bulk Sequence
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main container -->
+  <div class="container mx-auto px-4 w-full max-w-6xl mb-12 flex-1">
+    <!-- User Authentication Buttons -->
+    <div class="flex justify-end mb-4">
+      {% if logged_in %}
+        <p class="text-lg text-gray-700 dark:text-gray-300 mr-4">Logged in as {{ 'Admin' if is_admin else 'User' }}</p>
+        <a href="/logout" class="inline-block bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors shadow-md">
+          <i class="fas fa-sign-out-alt mr-2"></i>Logout
+        </a>
+      {% else %}
+        <a href="/login" class="inline-block bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors shadow-md mr-2">
+          <i class="fas fa-sign-in-alt mr-2"></i>Login
+        </a>
+        <a href="/register" class="inline-block bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors shadow-md">
+          <i class="fas fa-user-plus mr-2"></i>Register
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- Primary Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden transition-all duration-300">
+
+      <!-- Tabs -->
+      <div class="flex flex-wrap border-b border-gray-200 dark:border-gray-700 mb-6">
+        <ul class="flex flex-wrap w-full md:w-auto -mb-px text-sm font-medium text-center" id="tabs">
+          <li class="mr-2 flex-1 md:flex-none">
+            <a href="#" class="inline-block w-full p-4 border-b-2 border-primary-600 rounded-t-lg active"
+              id="tab-barcode-generator" data-target="barcode-generator-tab">
+              <i class="fas fa-barcode mr-2"></i>Barcode Generator
+            </a>
+          </li>
+          <li class="mr-2 flex-1 md:flex-none">
+            <a href="#" class="inline-block w-full p-4 border-b-2 border-transparent rounded-t-lg"
+              id="tab-qr-generator" data-target="qr-generator-tab">
+              <i class="fas fa-qrcode mr-2"></i>QR Code Generator
+            </a>
+          </li>
+          <li class="mr-2 flex-1 md:flex-none">
+            <a href="#" class="inline-block w-full p-4 border-b-2 border-transparent rounded-t-lg"
+              id="tab-sequence" data-target="sequence-tab">
+              <i class="fas fa-list-ol mr-2"></i>Sequence
+            </a>
+          </li>
+          <li class="mr-2 flex-1 md:flex-none">
+            <a href="#" class="inline-block w-full p-4 border-b-2 border-transparent rounded-t-lg"
+              id="tab-history" data-target="history-tab">
+              <i class="fas fa-history mr-2"></i>History
+            </a>
+          </li>
+          <li class="mr-2 flex-1 md:flex-none">
+            <a href="#" class="inline-block w-full p-4 border-b-2 border-transparent rounded-t-lg"
+              id="tab-analytics" data-target="analytics-tab">
+              <i class="fas fa-chart-line mr-2"></i>Analytics
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Tab Panel Container -->
+      <div class="p-6">
+        <!-- Barcode Generator Tab Content -->
+        <div id="barcode-generator-tab" class="tab-content block">
+          <div class="grid md:grid-cols-2 gap-8">
+            <!-- Barcode Generator Form -->
+            <div class="space-y-5 flex flex-col">
+              <div
+                class="bg-primary-50 dark:bg-gray-700 rounded-lg p-5 border border-primary-100 dark:border-gray-600 
+                       hover:shadow-md transition-shadow">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+                  <i class="fas fa-barcode mr-2 text-primary-500"></i>
+                  Generate Barcode
+                </h2>
+
+                <div class="space-y-4">
+                  <!-- Input Data -->
+                  <div class="relative">
+                    <label for="barcode_data" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Barcode Data
+                    </label>
+                    <input id="barcode_data" type="text" required
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                             focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-white" />
+                    <p id="barcode-data-validation" class="text-red-500 text-sm mt-1 hidden"></p>
+                  </div>
+
+                  <!-- Barcode Type Selection -->
+                  <div>
+                    <label for="barcode_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Barcode Type
+                    </label>
+                    <div class="relative">
+                      <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <i class="fas fa-tags text-gray-400"></i>
+                      </span>
+                      <select
+                        id="barcode_type"
+                        class="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-white appearance-none">
+                        <option value="code128">Code 128</option>
+                        <option value="code39">Code 39</option>
+                        <option value="ean13">EAN-13</option>
+                        <option value="ean8">EAN-8</option>
+                        <option value="upca">UPC-A</option>
+                      </select>
+                      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
+                        <i class="fas fa-chevron-down text-gray-400"></i>
+                      </div>
+                    </div>
+                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400" id="barcode-type-info">
+                      Code 128: Alphanumeric data with high density
+                    </div>
+                  </div>
+
+                  <!-- Barcode Size Input -->
+                  <div>
+                    <label for="barcode_size" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Barcode Size
+                    </label>
+                    <div class="relative">
+                      <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <i class="fas fa-expand text-gray-400"></i>
+                      </span>
+                      <input
+                        id="barcode_size"
+                        type="text"
+                        class="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="Enter size (e.g., 100x50 mm)">
+                    </div>
+                  </div>
+
+                  <!-- Barcode Name Input -->
+                  <div>
+                    <label for="barcode_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Barcode Name
+                    </label>
+                    <div class="relative">
+                      <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <i class="fas fa-tag text-gray-400"></i>
+                      </span>
+                      <input
+                        id="barcode_name"
+                        type="text"
+                        class="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="Enter name for barcode">
+                    </div>
+                  </div>
+
+                  <!-- Dynamic Options for Barcode -->
+                  <div class="mt-4 border-t border-gray-200 dark:border-gray-600 pt-4">
+                    <h3 class="text-md font-medium text-gray-800 dark:text-white mb-2">Tracking Options</h3>
+                    <div class="flex items-center mb-2">
+                      <input
+                        id="barcode_is_dynamic"
+                        type="checkbox"
+                        class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                      <label for="barcode_is_dynamic" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                        Make this barcode trackable (dynamic)
+                      </label>
+                    </div>
+                    <div id="barcode_redirect_container" class="hidden">
+                      <label for="barcode_redirect_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Redirect URL (where to send users after scan)
+                      </label>
+                      <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <i class="fas fa-link text-gray-400"></i>
+                        </span>
+                        <input
+                          id="barcode_redirect_url"
+                          type="url"
+                          class="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                                 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-white"
+                          placeholder="https://example.com">
+                      </div>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Users will be directed to this URL when they scan the barcode, allowing you to track scans.
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Generate Button -->
+                  <button
+                    id="generate-barcode-btn"
+                    class="w-full bg-primary-600 text-white py-3 px-4 rounded-md hover:bg-primary-700 
+                           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 
+                           transition-colors flex items-center justify-center shadow-sm">
+                    <i class="fas fa-magic mr-2"></i>
+                    <span>Generate Barcode</span>
+                    <div id="generate-barcode-spinner" class="hidden ml-2">
+                      <i class="fas fa-circle-notch fa-spin"></i>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Barcode Preview -->
+            <div class="space-y-5 flex flex-col">
+              <div class="bg-white dark:bg-gray-800 rounded-lg p-5 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+                  <i class="fas fa-eye mr-2 text-primary-500"></i>
+                  Barcode Preview
+                </h2>
+                <div id="barcode-preview" class="flex items-center justify-center h-64">
+                  <!-- Barcode placeholder -->
+                  <div id="barcode-placeholder" class="flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                    <i class="fas fa-barcode text-6xl mb-3"></i>
+                    <p class="text-sm">Barcode will appear here</p>
+                  </div>
+                  <img id="barcode-img" class="max-w-full h-auto hidden" alt="Barcode Preview">
+                </div>
+                
+                <!-- Result Area (Hidden until barcode is generated) -->
+                <div id="result-area" class="hidden mt-4 space-y-4">
+                  <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+                    <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2">Barcode Information</h3>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                      <div class="text-gray-600 dark:text-gray-400">Type:</div>
+                      <div id="info-type" class="font-medium text-gray-800 dark:text-white">-</div>
+                      <div class="text-gray-600 dark:text-gray-400">Data:</div>
+                      <div id="info-data" class="font-medium text-gray-800 dark:text-white">-</div>
+                      <div class="text-gray-600 dark:text-gray-400">Created:</div>
+                      <div id="info-created" class="font-medium text-gray-800 dark:text-white">-</div>
+                    </div>
+                  </div>
+                  
+                  <div class="border-t border-gray-200 dark:border-gray-600 pt-4 flex space-x-2">
+                    <a id="download-link" href="#" download 
+                       class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 
+                              focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 
+                              transition-colors flex items-center shadow-sm">
+                      <i class="fas fa-download mr-2"></i>
+                      Download
+                    </a>
+                    <button id="print-barcode-btn"
+                       class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 
+                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
+                              transition-colors flex items-center shadow-sm">
+                      <i class="fas fa-print mr-2"></i>
+                      Print
+                    </button>
+                    <button id="new-barcode-btn"
+                       class="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 
+                              focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 
+                              transition-colors flex items-center shadow-sm">
+                      <i class="fas fa-plus mr-2"></i>
+                      New
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR Code Generator Tab Content -->
+        <div id="qr-generator-tab" class="tab-content hidden">
+          <div class="grid md:grid-cols-2 gap-8">
+            <!-- QR Generator Form (Left Column) -->
+            <div class="space-y-5 flex flex-col">
+              <div class="bg-secondary-50 dark:bg-gray-700 rounded-lg p-5 border border-secondary-100 dark:border-gray-600 hover:shadow-md transition-shadow">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+                  <i class="fas fa-qrcode mr-2 text-secondary-500"></i>
+                  Generate QR Code
+                </h2>
+
+                <div class="space-y-4">
+                  <!-- QR Code Type Selection -->
+                  <div>
+                    <label for="qr_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      QR Code Type
+                    </label>
+                    <div class="relative">
+                      <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <i class="fas fa-tags text-gray-400"></i>
+                      </span>
+                      <select
+                        id="qr_type"
+                        class="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white appearance-none">
+                        <option value="text">Text</option>
+                        <option value="url">URL / Website</option>
+                        <option value="email">Email Address</option>
+                        <option value="phone">Phone Number</option>
+                        <option value="sms">SMS Message</option>
+                        <option value="wifi">WiFi Network</option>
+                        <option value="vcard">Contact Card (vCard)</option>
+                        <option value="location">Geographic Location</option>
+                      </select>
+                      <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
+                        <i class="fas fa-chevron-down text-gray-400"></i>
+                      </div>
+                    </div>
+                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400" id="qr-type-info">
+                      Select the type of data to encode in the QR code
+                    </div>
+                  </div>
+
+                  <!-- Dynamic Input Fields Based on QR Type -->
+                  <!-- Text Input (default) -->
+                  <div id="qr-text-fields" class="qr-type-fields">
+                    <div>
+                      <label for="qr_data" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        QR Code Data
+                      </label>
+                      <textarea id="qr_data" rows="3"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="https://example.com"></textarea>
+                      <p id="qrcode-data-validation" class="text-red-500 text-sm mt-1 hidden"></p>
+                    </div>
+                  </div>
+
+                  <!-- URL Input -->
+                  <div id="qr-url-fields" class="qr-type-fields hidden">
+                    <div>
+                      <label for="qr_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Website URL <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <i class="fas fa-globe text-gray-400"></i>
+                        </span>
+                        <input
+                          id="qr_url"
+                          type="url"
+                          class="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                                 focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                          placeholder="https://example.com">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Email Input -->
+                  <div id="qr-email-fields" class="qr-type-fields hidden">
+                    <div>
+                      <label for="qr_email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Email Address <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <i class="fas fa-envelope text-gray-400"></i>
+                        </span>
+                        <input
+                          id="qr_email"
+                          type="email"
+                          class="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                                 focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                          placeholder="email@example.com">
+                      </div>
+                    </div>
+                    <div>
+                      <label for="qr_email_subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Subject (optional)
+                      </label>
+                      <input
+                        id="qr_email_subject"
+                        type="text"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="Your email subject">
+                    </div>
+                    <div>
+                      <label for="qr_email_body" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Body (optional)
+                      </label>
+                      <textarea
+                        id="qr_email_body"
+                        rows="3"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="Your email message"></textarea>
+                    </div>
+                  </div>
+
+                  <!-- Phone Input -->
+                  <div id="qr-phone-fields" class="qr-type-fields hidden">
+                    <div>
+                      <label for="qr_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Phone Number <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <i class="fas fa-phone text-gray-400"></i>
+                        </span>
+                        <input
+                          id="qr_phone"
+                          type="tel"
+                          class="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                                 focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                          placeholder="+1 123 456 7890">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SMS Input -->
+                  <div id="qr-sms-fields" class="qr-type-fields hidden">
+                    <div>
+                      <label for="qr_sms_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Phone Number <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <i class="fas fa-mobile-alt text-gray-400"></i>
+                        </span>
+                        <input
+                          id="qr_sms_number"
+                          type="tel"
+                          class="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                                 focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                          placeholder="+1 123 456 7890">
+                      </div>
+                    </div>
+                    <div>
+                      <label for="qr_sms_message" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Message (optional)
+                      </label>
+                      <textarea
+                        id="qr_sms_message"
+                        rows="2"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="Your SMS message"></textarea>
+                    </div>
+                  </div>
+
+                  <!-- WiFi Input -->
+                  <div id="qr-wifi-fields" class="qr-type-fields hidden">
+                    <div>
+                      <label for="qr_wifi_ssid" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Network Name (SSID) <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <i class="fas fa-wifi text-gray-400"></i>
+                        </span>
+                        <input
+                          id="qr_wifi_ssid"
+                          type="text"
+                          class="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                                 focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                          placeholder="WiFi Network Name">
+                      </div>
+                    </div>
+                    <div>
+                      <label for="qr_wifi_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Encryption Type
+                      </label>
+                      <select
+                        id="qr_wifi_type"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white">
+                        <option value="WPA">WPA/WPA2</option>
+                        <option value="WEP">WEP</option>
+                        <option value="nopass">No Password</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="qr_wifi_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Password
+                      </label>
+                      <div class="relative">
+                        <input
+                          id="qr_wifi_password"
+                          type="password"
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                                 focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                          placeholder="WiFi Password">
+                        <button type="button" id="toggle_wifi_password" class="absolute inset-y-0 right-0 px-3 flex items-center">
+                          <i class="fas fa-eye text-gray-400"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="flex items-center mt-2">
+                        <input
+                          id="qr_wifi_hidden"
+                          type="checkbox"
+                          class="h-4 w-4 text-secondary-600 focus:ring-secondary-500 border-gray-300 rounded">
+                        <label for="qr_wifi_hidden" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                          Hidden Network
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- vCard Input -->
+                  <div id="qr-vcard-fields" class="qr-type-fields hidden">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label for="qr_vcard_firstname" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          First Name <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                          id="qr_vcard_firstname"
+                          type="text"
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                                 focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                          placeholder="First Name">
+                      </div>
+                      <div>
+                        <label for="qr_vcard_lastname" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Last Name
+                        </label>
+                        <input
+                          id="qr_vcard_lastname"
+                          type="text"
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                                 focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                          placeholder="Last Name">
+                      </div>
+                    </div>
+                    <div>
+                      <label for="qr_vcard_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Phone Number
+                      </label>
+                      <input
+                        id="qr_vcard_phone"
+                        type="tel"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="+1 123 456 7890">
+                    </div>
+                    <div>
+                      <label for="qr_vcard_email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Email
+                      </label>
+                      <input
+                        id="qr_vcard_email"
+                        type="email"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="email@example.com">
+                    </div>
+                    <div>
+                      <label for="qr_vcard_org" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Company
+                      </label>
+                      <input
+                        id="qr_vcard_org"
+                        type="text"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="Company or Organization">
+                    </div>
+                    <div>
+                      <label for="qr_vcard_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Website
+                      </label>
+                      <input
+                        id="qr_vcard_url"
+                        type="url"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="https://example.com">
+                    </div>
+                  </div>
+
+                  <!-- Location Input -->
+                  <div id="qr-location-fields" class="qr-type-fields hidden">
+                    <div>
+                      <label for="qr_location_lat" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Latitude <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="qr_location_lat"
+                        type="text"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="e.g. 40.7128">
+                    </div>
+                    <div>
+                      <label for="qr_location_lng" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Longitude <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="qr_location_lng"
+                        type="text"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                               focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                        placeholder="e.g. -74.0060">
+                    </div>
+                    <div class="mt-1">
+                      <button
+                        id="get_current_location"
+                        type="button"
+                        class="text-secondary-600 hover:text-secondary-800 text-sm flex items-center">
+                        <i class="fas fa-map-marker-alt mr-1"></i>
+                        Get current location
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- QR Code Color Options -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      QR Code Colors
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label for="qr_color" class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Foreground Color</label>
+                        <div class="flex items-center">
+                          <input type="color" id="qr_color" value="#000000" class="h-8 w-8 border-0 cursor-pointer">
+                          <span id="qr_color_value" class="ml-2 text-xs text-gray-600 dark:text-gray-400">#000000</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label for="qr_bg_color" class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Background Color</label>
+                        <div class="flex items-center">
+                          <input type="color" id="qr_bg_color" value="#FFFFFF" class="h-8 w-8 border-0 cursor-pointer">
+                          <span id="qr_bg_color_value" class="ml-2 text-xs text-gray-600 dark:text-gray-400">#FFFFFF</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- QR Code Tracking Options -->
+                  <div class="mt-4 border-t border-gray-200 dark:border-gray-600 pt-4">
+                    <h3 class="text-md font-medium text-gray-800 dark:text-white mb-2">Tracking Options</h3>
+                    <div class="flex items-center mb-2">
+                      <input
+                        id="qr_is_dynamic"
+                        type="checkbox"
+                        class="h-4 w-4 text-secondary-600 focus:ring-secondary-500 border-gray-300 rounded">
+                      <label for="qr_is_dynamic" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                        Make this QR code trackable (dynamic)
+                      </label>
+                    </div>
+                    <div id="qr_redirect_container" class="hidden">
+                      <label for="qr_redirect_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Redirect URL (where to send users after scan)
+                      </label>
+                      <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <i class="fas fa-link text-gray-400"></i>
+                        </span>
+                        <input
+                          id="qr_redirect_url"
+                          type="url" 
+                          class="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                                 focus:outline-none focus:ring-2 focus:ring-secondary-500 dark:bg-gray-800 dark:text-white"
+                          placeholder="https://example.com">
+                      </div>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Users will be directed to this URL when they scan the QR code, allowing you to track scans.
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Generate Button -->
+                  <button
+                    id="generate-qr-btn"
+                    class="w-full bg-gray-600 text-white py-3 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors flex items-center justify-center border-none">
+                    <i class="fas fa-magic mr-2"></i>
+                    <span>Generate QR Code</span>
+                    <div id="generate-qr-spinner" class="hidden ml-2">
+                      <i class="fas fa-circle-notch fa-spin"></i>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- QR Preview (Right Column) -->
+            <div class="space-y-5 flex flex-col">
+              <div class="bg-white dark:bg-gray-800 rounded-lg p-5 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+                  <i class="fas fa-eye mr-2 text-secondary-500"></i>
+                  QR Code Preview
+                </h2>
+                <div id="qr-preview" class="flex items-center justify-center h-64">
+                  <!-- QR placeholder -->
+                  <div id="qr-placeholder" class="flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                    <i class="fas fa-qrcode text-6xl mb-3"></i>
+                    <p class="text-sm">QR code will appear here</p>
+                  </div>
+                  <img id="qr-img" class="max-w-full h-auto hidden" alt="QR Code Preview">
+                </div>
+                
+                <!-- Result Area (Hidden until QR is generated) -->
+                <div id="qr-result-area" class="hidden mt-4 space-y-4">
+                  <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+                    <h3 class="text-lg font-medium text-gray-800 dark:text-white mb-2">QR Code Information</h3>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                      <div class="text-gray-600 dark:text-gray-400">Type:</div>
+                      <div id="qr-info-type" class="font-medium text-gray-800 dark:text-white">-</div>
+                      <div class="text-gray-600 dark:text-gray-400">Data:</div>
+                      <div id="qr-info-data" class="font-medium text-gray-800 dark:text-white">-</div>
+                      <div class="text-gray-600 dark:text-gray-400">Created:</div>
+                      <div id="qr-info-created" class="font-medium text-gray-800 dark:text-white">-</div>
+                    </div>
+                  </div>
+                  
+                  <div class="border-t border-gray-200 dark:border-gray-600 pt-4 flex space-x-2">
+                    <a id="qr-download-link" href="#" download 
+                       class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 
+                              focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 
+                              transition-colors flex items-center shadow-sm">
+                      <i class="fas fa-download mr-2"></i>
+                      Download
+                    </a>
+                    <button id="print-qr-btn"
+                       class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 
+                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
+                              transition-colors flex items-center shadow-sm">
+                      <i class="fas fa-print mr-2"></i>
+                      Print
+                    </button>
+                    <button id="new-qr-btn"
+                       class="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 
+                              focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 
+                              transition-colors flex items-center shadow-sm">
+                      <i class="fas fa-plus mr-2"></i>
+                      New
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sequence Generator Tab Content -->
+        <div id="sequence-tab" class="tab-content hidden">
+          <div class="sequence-generator-container w-full px-4 sm:px-6 lg:px-8 py-4">
+            <div class="sequence-header mb-6" role="banner">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                    <i class="fas fa-barcode text-blue-500 mr-3"></i>
+                    Barcode Sequence Generator
+                  </h2>
+                  <p class="auth-status text-sm text-gray-600 dark:text-gray-400 mt-1" aria-live="polite">
+                    <i class="fas fa-info-circle mr-1"></i> Generate and download multiple barcodes in sequence
+                  </p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <!-- Bulk Generator Button - Always Visible -->
+                  <a href="/bulk_sequence_generator" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all">
+                    <i class="fas fa-layer-group mr-2"></i>
+                    Bulk Generator (100+)
+                  </a>
+                  <div class="export-options hidden flex flex-wrap gap-2">
+                    <button id="export-csv-btn" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
+                      <i class="fas fa-file-csv mr-2"></i> Export CSV
+                    </button>
+                    <button id="export-pdf-btn" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
+                      <i class="fas fa-file-pdf mr-2"></i> Export PDF
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sequence-content flex flex-col lg:flex-row gap-6">
+              <!-- Left Column - Form -->
+              <div class="sequence-form-column w-full lg:w-1/3">
+                <div class="sequence-form-container bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <i class="fas fa-sliders-h text-primary-500 mr-2"></i> Sequence Settings
+                  </h3>
+                  <form id="sequence-form" class="settings-form space-y-4">
+                    <div class="form-group">
+                      <label for="seq_prefix" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Prefix:</label>
+                      <div class="mt-1 relative rounded-md shadow-sm">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                          <i class="fas fa-font"></i>
+                        </span>
+                        <input type="text" id="seq_prefix" name="prefix" placeholder="Optional prefix"
+                               class="pl-10 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                      </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div class="form-group">
+                        <label for="seq_start" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Number:</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-hashtag"></i>
+                          </span>
+                          <input type="number" id="seq_start" name="start" value="1" min="0"
+                                 class="pl-10 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        </div>
+                    </div>
+    
+                      <div class="form-group">
+                        <label for="seq_count" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Count:</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-layer-group"></i>
+                          </span>
+                          <input type="number" id="seq_count" name="count" value="10" min="1" max="1000"
+                                 class="pl-10 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div class="form-group">
+                        <label for="seq_pad" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Padding (zeros):</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-indent"></i>
+                          </span>
+                          <input type="number" id="seq_pad" name="pad_length" value="0" min="0" max="20"
+                                 class="pl-10 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        </div>
+                    </div>
+    
+                      <div class="form-group">
+                        <label for="seq_suffix" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Suffix:</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="fas fa-font"></i>
+                          </span>
+                          <input type="text" id="seq_suffix" name="suffix" placeholder="Optional suffix"
+                                 class="pl-10 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label for="seq_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Barcode Type:</label>
+                      <div class="mt-1 relative rounded-md shadow-sm">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                          <i class="fas fa-barcode"></i>
+                        </span>
+                      <select id="seq_type" name="barcode_type"
+                              class="pl-10 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                        <option value="code128" selected>Code 128</option>
+                        <option value="code39">Code 39</option>
+                        <option value="ean13">EAN-13</option>
+                        <option value="ean8">EAN-8</option>
+                        <option value="upca">UPC-A</option>
+                      </select>
+                      </div>
+                    </div>
+                    
+                    <div class="form-actions pt-4">
+                      <button type="submit" id="generate-sequence-btn" 
+                              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all">
+                        <i class="fas fa-magic mr-2"></i> Generate Sequence
+                    </button>
+                      
+                      <!-- Bulk Sequence Generator Button -->
+                      <a href="/bulk_sequence_generator" id="bulk-sequence-btn" 
+                              class="w-full mt-3 flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all">
+                        <i class="fas fa-layer-group mr-2"></i>
+                        Bulk Generate (100+)
+                      </a>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              
+              <!-- Right Column - Results -->
+              <div class="sequence-results-column w-full lg:w-2/3">
+                <div class="sequence-results-container bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300">
+                  <div class="results-header flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                      <i class="fas fa-list-ul text-primary-500 mr-2"></i> Generated Barcodes
+                    </h3>
+                  </div>
+                  
+                  <div id="sequence-results" class="results-list min-h-[300px]">
+                    <div class="flex flex-col items-center justify-center text-center py-12 text-gray-500 dark:text-gray-400 space-y-4">
+                      <div class="w-20 h-20 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
+                        <i class="fas fa-barcode text-4xl text-gray-400 dark:text-gray-500"></i>
+                      </div>
+                      <div>
+                        <p class="text-lg font-medium">No barcodes generated yet</p>
+                        <p class="text-sm">Use the form to create a sequence of barcodes</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div id="export-status" class="export-status hidden mt-4 rounded-md"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- History Tab Content -->
+        <div id="history-tab" class="tab-content hidden">
+          <div class="p-4">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">History</h2>
+            <div id="history-wrapper" class="overflow-x-auto">
+              <table id="history-table" class="min-w-full text-left text-sm">
+                <thead class="border-b bg-gray-50 dark:bg-gray-700 dark:text-gray-300">
+                  <tr>
+                    <th class="px-4 py-2">ID</th>
+                    <th class="px-4 py-2">Type</th>
+                    <th class="px-4 py-2">Data</th>
+                    <th class="px-4 py-2">Created At</th>
+                  </tr>
+                </thead>
+                <tbody id="history-body" class="divide-y divide-gray-200 dark:divide-gray-600 dark:text-gray-200">
+                  <!-- Rows appended dynamically -->
+                </tbody>
+              </table>
+            </div>
+            <p id="history-empty" class="text-gray-500 dark:text-gray-400 mt-4 hidden">No barcodes have been generated yet.</p>
+          </div>
+        </div>
+
+        <!-- Analytics Tab Content -->
+        <div id="analytics-tab" class="tab-content hidden">
+          <div class="p-4">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Analytics</h2>
+            
+            <div class="mb-6 border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
+              <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Scan Statistics</h3>
+              
+              <div class="space-y-4">
+                <div>
+                  <label for="analytics_barcode_select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Select Barcode/QR Code
+                  </label>
+                  <select id="analytics_barcode_select" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-white">
+                    <!-- Options populated dynamically -->
+                  </select>
+                </div>
+
+                <div id="analytics-empty" class="py-8 text-center text-gray-500 dark:text-gray-400 hidden">
+                  <i class="fas fa-chart-bar text-4xl mb-2"></i>
+                  <p>Select a trackable barcode or QR code to view analytics</p>
+                </div>
+                
+                <div id="analytics-content" class="hidden">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <!-- Total Scans Card -->
+                    <div class="bg-indigo-50 dark:bg-indigo-900 rounded-lg p-4">
+                      <h4 class="text-sm font-medium text-indigo-700 dark:text-indigo-200">Total Scans</h4>
+                      <p id="total-scans" class="text-2xl font-bold text-indigo-800 dark:text-indigo-100 mt-1">0</p>
+                    </div>
+                    
+                    <!-- Today's Scans Card -->
+                    <div class="bg-green-50 dark:bg-green-900 rounded-lg p-4">
+                      <h4 class="text-sm font-medium text-green-700 dark:text-green-200">Scans Today</h4>
+                      <p id="today-scans" class="text-2xl font-bold text-green-800 dark:text-green-100 mt-1">0</p>
+                    </div>
+                    
+                    <!-- Last Scan Card -->
+                    <div class="bg-blue-50 dark:bg-blue-900 rounded-lg p-4">
+                      <h4 class="text-sm font-medium text-blue-700 dark:text-blue-200">Last Scan</h4>
+                      <p id="last-scan" class="text-sm font-bold text-blue-800 dark:text-blue-100 mt-1">Never</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Chart Title -->
+                  <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Scans Over Time</h4>
+                  
+                  <!-- Chart Container -->
+                  <div class="relative h-64 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-2">
+                    <canvas id="analytics-chart"></canvas>
+                  </div>
+                  
+                  <!-- Barcode/QR Code Info -->
+                  <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Details</h4>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                      <div class="text-gray-600 dark:text-gray-400">Type:</div>
+                      <div id="analytics-type" class="font-medium text-gray-800 dark:text-white">-</div>
+                      
+                      <div class="text-gray-600 dark:text-gray-400">Data:</div>
+                      <div id="analytics-data" class="font-medium text-gray-800 dark:text-white">-</div>
+                      
+                      <div class="text-gray-600 dark:text-gray-400">Created:</div>
+                      <div id="analytics-created" class="font-medium text-gray-800 dark:text-white">-</div>
+                      
+                      <div id="analytics-redirect-label" class="text-gray-600 dark:text-gray-400">Redirect URL:</div>
+                      <div id="analytics-redirect" class="font-medium text-gray-800 dark:text-white">-</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button id="analytics-load-btn" class="mt-4 bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors flex items-center shadow-sm">
+                <i class="fas fa-sync-alt mr-2"></i>
+                Load Analytics
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-auto text-center text-gray-500 dark:text-gray-400 pb-6">
+    <p>© 2025 Advanced Barcode Generator | Made with <i class="fas fa-heart text-red-500"></i></p>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50"></div>
+
+  <!-- Main Script -->
+  <script>
+    // Define analyticsChart at the global scope
+    let analyticsChart = null;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      /* =======================
+         Dark Mode Toggle
+      ======================= */
+      const htmlElement = document.documentElement;
+      const themeToggleBtn = document.getElementById('theme-toggle');
+      
+      // Check for saved theme or system preference
+      if (localStorage.getItem('color-theme') === 'dark' || 
+          (!localStorage.getItem('color-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        htmlElement.classList.add('dark');
+      } else {
+        htmlElement.classList.remove('dark');
+      }
+
+      themeToggleBtn.addEventListener('click', function() {
+        if (htmlElement.classList.contains('dark')) {
+          htmlElement.classList.remove('dark');
+          localStorage.setItem('color-theme', 'light');
+        } else {
+          htmlElement.classList.add('dark');
+          localStorage.setItem('color-theme', 'dark');
+        }
+      });
+
+      /* =======================
+         Tab Navigation
+      ======================= */
+      initTabs();
+
+      // For demonstration - load placeholders
+      loadRecentBarcodes();
+
+      /* =======================
+         Barcode Type Handlers
+      ======================= */
+      const barcodeTypeSelect = document.getElementById('barcode_type');
+      barcodeTypeSelect.addEventListener('change', function() {
+        updateBarcodeTypeInfo(this.value);
+      });
+
+      /* =======================
+         Input & Preview
+      ======================= */
+      const dataInput = document.getElementById('barcode_data');
+      dataInput.addEventListener('input', function() {
+        validateInput();
+      });
+
+      /* =======================
+         Generate Button
+      ======================= */
+      document.getElementById('generate-barcode-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        if (!validateInput()) return;
+        
+        const spinner = document.getElementById('generate-barcode-spinner');
+        spinner.classList.remove('hidden');
+        this.disabled = true;
+
+        generateBarcode().finally(() => {
+          spinner.classList.add('hidden');
+          this.disabled = false;
+        });
+      });
+
+      /* =======================
+         Print & New Barcode
+      ======================= */
+      document.getElementById('print-barcode-btn').addEventListener('click', function() {
+        const barcodeImg = document.getElementById('barcode-img');
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Print Barcode</title>
+              <style>
+                body { 
+                  display: flex; 
+                  justify-content: center; 
+                  align-items: center; 
+                  height: 100vh; 
+                  margin: 0;
+                }
+                img { max-width: 100%; }
+                .container {
+                  text-align: center;
+                  padding: 20px;
+                }
+                @media print {
+                  @page { margin: 0; }
+                  body { margin: 1cm; }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <img src="${barcodeImg.src}" alt="Barcode" />
+                <p id="info-data">${document.getElementById('info-data').textContent}</p>
+              </div>
+              <script>
+                window.onload = function() { window.print(); window.close(); }
+              <\/script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      });
+
+      document.getElementById('new-barcode-btn').addEventListener('click', resetBarcodeForm);
+
+      /* =======================
+         Initial Setup
+      ======================= */
+      updateBarcodeTypeInfo(barcodeTypeSelect.value);
+
+      /* =======================
+         Sequence Generation
+      ======================= */
+      document.getElementById('sequence-form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log("Sequence form submitted");
+        
+        try {
+          // Get form values
+          const prefix = document.getElementById('seq_prefix')?.value || '';
+          const startNum = parseInt(document.getElementById('seq_start')?.value || '1');
+          const count = parseInt(document.getElementById('seq_count')?.value || '10');
+          const padLength = parseInt(document.getElementById('seq_pad')?.value || '0');
+          const suffix = document.getElementById('seq_suffix')?.value || '';
+          const barcodeType = document.getElementById('seq_type')?.value || 'code128';
+          
+          console.log("Sequence form values:", { prefix, startNum, count, padLength, suffix, barcodeType });
+          
+          // Show loading state
+          const generateBtn = document.getElementById('generate-sequence-btn');
+          generateBtn.disabled = true;
+          generateBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Generating...';
+          
+          // Make API request
+          axios.post('/api/generate_sequence', {
+            prefix,
+            start: startNum,
+            count,
+            pad_length: padLength,
+            barcode_type: barcodeType,
+            suffix,
+            save_to_system: false
+          }, {
+            headers: { 'Content-Type': 'application/json' }
+          })
+          .then(response => {
+            const results = response.data;
+            if (!results || !results.sequence_data || results.sequence_data.length === 0) {
+              showToast('No sequence generated', 'warning');
+              return;
+            }
+
+            // Display results
+            const seqResultsDiv = document.getElementById('sequence-results');
+            const seqList = document.getElementById('sequence-list');
+            seqList.innerHTML = '';
+            
+            results.sequence_data.forEach(item => {
+              const li = document.createElement('li');
+              li.className = 'mb-2 p-2 border rounded';
+              
+              // Create barcode image element
+              const img = document.createElement('img');
+              img.src = `data:image/png;base64,${item.image_data}`;
+              img.alt = `Barcode for ${item.data}`;
+              img.className = 'mb-2';
+              
+              // Create code text element
+              const codeText = document.createElement('div');
+              codeText.textContent = item.data;
+              codeText.className = 'text-sm text-gray-600';
+              
+              li.appendChild(img);
+              li.appendChild(codeText);
+              seqList.appendChild(li);
+            });
+
+            seqResultsDiv.classList.remove('hidden');
+            showToast('Sequence generated successfully!', 'success');
+          })
+          .catch(err => {
+            console.error('Error generating sequence:', err);
+            showToast('Failed to generate sequence', 'error');
+          })
+          .finally(() => {
+            // Reset button state
+            const generateBtn = document.getElementById('generate-sequence-btn');
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = 'Generate Sequence';
+          });
+        } catch (error) {
+          console.error("Error in sequence form submission:", error);
+          showToast('An error occurred while generating the sequence', 'error');
+        }
+      });
+
+      /* =======================
+         Analytics
+      ======================= */
+      // Define loadAnalytics function if it doesn't exist
+      function loadAnalytics() {
+        console.log('Loading analytics data...');
+        const analyticsContainer = document.getElementById('analytics-container');
+        if (analyticsContainer) {
+          analyticsContainer.innerHTML = '<div class="p-4 text-center"><i class="fas fa-spinner fa-spin mr-2"></i> Loading analytics data...</div>';
+          
+          // Get barcode ID from select
+          const barcodeSelect = document.getElementById('analytics-barcode-select');
+          const barcodeId = barcodeSelect ? barcodeSelect.value : null;
+          
+          if (barcodeId) {
+            fetch(`/api/analytics/${barcodeId}`)
+              .then(response => response.json())
+              .then(data => {
+                if (data && data.total_scans !== undefined) {
+                  // Display analytics data
+                  analyticsContainer.innerHTML = `
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                      <h3 class="text-lg font-medium mb-4">Analytics for Barcode #${data.barcode_id}</h3>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="stat-card bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
+                          <div class="text-sm text-blue-700 dark:text-blue-300">Total Scans</div>
+                          <div class="text-2xl font-bold">${data.total_scans}</div>
+                        </div>
+                        <div class="stat-card bg-green-50 dark:bg-green-900 p-3 rounded-lg">
+                          <div class="text-sm text-green-700 dark:text-green-300">Last Scan</div>
+                          <div class="text-md font-semibold">${data.last_scan ? new Date(data.last_scan).toLocaleString() : 'Never'}</div>
+                        </div>
+                      </div>
+                      <div id="analytics-chart" class="h-64 mt-6"></div>
+                    </div>
+                  `;
+                  
+                  // TODO: Add chart visualization if needed
+                } else {
+                  analyticsContainer.innerHTML = '<div class="p-4 text-center text-gray-500">No analytics data available for this barcode.</div>';
+                }
+              })
+              .catch(error => {
+                console.error('Error loading analytics:', error);
+                analyticsContainer.innerHTML = '<div class="p-4 text-center text-red-500">Failed to load analytics data.</div>';
+              });
+          } else {
+            analyticsContainer.innerHTML = '<div class="p-4 text-center text-gray-500">Please select a barcode to view analytics.</div>';
+          }
+        }
+      }
+      
+      document.getElementById('analytics-load-btn').addEventListener('click', loadAnalytics);
+
+      /* =======================
+         QR Code Handler
+      ======================= */
+      document.getElementById('generate-qr-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log("QR Generate button clicked");
+        
+        try {
+          // Check that required elements exist
+          const spinner = document.getElementById('generate-qr-spinner');
+          if (!spinner) {
+            console.error("Missing element: generate-qr-spinner");
+            showToast('Application error: Missing UI element', 'error');
+            return;
+          }
+          
+          // Get QR type field first to make sure it exists
+          const qrTypeElement = document.getElementById('qr_type');
+          if (!qrTypeElement) {
+            console.error("Missing element: qr_type");
+            showToast('Application error: Missing QR type field', 'error');
+            return;
+          }
+          
+          // Validate input
+          if (!validateQRInput()) {
+            console.error("QR input validation failed");
+            return;
+          }
+          
+          // Show loading spinner and disable button
+          spinner.classList.remove('hidden');
+          this.disabled = true;
+
+          generateQRCode()
+            .then(response => {
+              console.log("QR Code generation successful:", response);
+            })
+            .catch(error => {
+              console.error("QR Code generation failed:", error);
+              showToast('Failed to generate QR code. Check console for details.', 'error');
+            })
+            .finally(() => {
+              spinner.classList.add('hidden');
+              this.disabled = false;
+            });
+        } catch (err) {
+          console.error("Error in QR button handler:", err);
+          showToast('An unexpected error occurred', 'error');
+          
+          // Try to recover UI state
+          try {
+            const spinner = document.getElementById('generate-qr-spinner');
+            if (spinner) spinner.classList.add('hidden');
+            this.disabled = false;
+          } catch (e) {
+            console.error("Error recovering UI state:", e);
+          }
+        }
+      });
+
+      // QR color pickers
+      document.getElementById('qr_color').addEventListener('input', function(e) {
+        document.getElementById('qr_color_value').textContent = e.target.value;
+      });
+      
+      document.getElementById('qr_bg_color').addEventListener('input', function(e) {
+        document.getElementById('qr_bg_color_value').textContent = e.target.value;
+      });
+      
+      // Print QR and New QR buttons
+      document.getElementById('print-qr-btn').addEventListener('click', function() {
+        const qrImg = document.getElementById('qr-img');
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Print QR Code</title>
+              <style>
+                body { 
+                  display: flex; 
+                  justify-content: center; 
+                  align-items: center; 
+                  height: 100vh; 
+                  margin: 0;
+                }
+                img { max-width: 100%; }
+                .container {
+                  text-align: center;
+                  padding: 20px;
+                }
+                @media print {
+                  @page { margin: 0; }
+                  body { margin: 1cm; }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <img src="${qrImg.src}" alt="QR Code" />
+                <p id="qr-info-data">${document.getElementById('qr-info-data').textContent}</p>
+              </div>
+              <script>
+                window.onload = function() { window.print(); window.close(); }
+              <\/script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      });
+
+      document.getElementById('new-qr-btn').addEventListener('click', resetQRForm);
+
+      /* =======================
+         QR Code Type Handler
+      ======================= */
+      document.getElementById('qr_type').addEventListener('change', function() {
+        // Hide all QR type-specific fields
+        const typeFields = document.querySelectorAll('.qr-type-fields');
+        typeFields.forEach(field => field.classList.add('hidden'));
+        
+        // Show the selected type fields
+        const selectedType = this.value;
+        document.getElementById(`qr-${selectedType}-fields`).classList.remove('hidden');
+        
+        // Update the type info text
+        updateQRTypeInfo(selectedType);
+      });
+
+      // Toggle WiFi password visibility
+      document.getElementById('toggle_wifi_password').addEventListener('click', function() {
+        const passwordField = document.getElementById('qr_wifi_password');
+        const icon = this.querySelector('i');
+        
+        if (passwordField.type === 'password') {
+          passwordField.type = 'text';
+          icon.classList.remove('fa-eye');
+          icon.classList.add('fa-eye-slash');
+        } else {
+          passwordField.type = 'password';
+          icon.classList.remove('fa-eye-slash');
+          icon.classList.add('fa-eye');
+        }
+      });
+
+      // Get current location
+      document.getElementById('get_current_location').addEventListener('click', function() {
+        if (navigator.geolocation) {
+          this.disabled = true;
+          this.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-1"></i> Getting location...';
+          
+          navigator.geolocation.getCurrentPosition(
+            function(position) {
+              document.getElementById('qr_location_lat').value = position.coords.latitude.toFixed(6);
+              document.getElementById('qr_location_lng').value = position.coords.longitude.toFixed(6);
+              
+              const button = document.getElementById('get_current_location');
+              button.disabled = false;
+              button.innerHTML = '<i class="fas fa-check mr-1"></i> Location updated';
+              
+              setTimeout(() => {
+                button.innerHTML = '<i class="fas fa-map-marker-alt mr-1"></i> Get current location';
+              }, 2000);
+            },
+            function(error) {
+              console.error('Error getting location:', error);
+              const button = document.getElementById('get_current_location');
+              button.disabled = false;
+              button.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Failed to get location';
+              
+              setTimeout(() => {
+                button.innerHTML = '<i class="fas fa-map-marker-alt mr-1"></i> Get current location';
+              }, 2000);
+              
+              showToast('Failed to get your location. Please enter coordinates manually.', 'error');
+            }
+          );
+        } else {
+          showToast('Geolocation is not supported by your browser', 'error');
+        }
+      });
+
+      /*************************************************************
+       * QR Type Info
+      *************************************************************/
+      function updateQRTypeInfo(type) {
+        const infoElement = document.getElementById('qr-type-info');
+        
+        switch(type) {
+          case 'text':
+            infoElement.textContent = 'Plain text QR code for general purpose use';
+            break;
+          case 'url':
+            infoElement.textContent = 'QR code with a website URL that opens in a browser when scanned';
+            break;
+          case 'email':
+            infoElement.textContent = 'QR code that opens email composer with pre-filled address';
+            break;
+          case 'phone':
+            infoElement.textContent = 'QR code that allows users to call a phone number directly';
+            break;
+          case 'sms':
+            infoElement.textContent = 'QR code that opens SMS composer with pre-filled number and message';
+            break;
+          case 'wifi':
+            infoElement.textContent = 'QR code that allows users to connect to a WiFi network automatically';
+            break;
+          case 'vcard':
+            infoElement.textContent = 'QR code containing contact information that can be saved to the phone';
+            break;
+          case 'location':
+            infoElement.textContent = 'QR code with geographic coordinates that open in a maps application';
+            break;
+          default:
+            infoElement.textContent = 'Select the type of data to encode in the QR code';
+        }
+      }
+
+      // Handle dynamic barcode checkbox
+      document.getElementById('barcode_is_dynamic').addEventListener('change', function() {
+        const redirectContainer = document.getElementById('barcode_redirect_container');
+        if (this.checked) {
+          redirectContainer.classList.remove('hidden');
+        } else {
+          redirectContainer.classList.add('hidden');
+        }
+      });
+
+      // Handle dynamic QR code checkbox
+      document.getElementById('qr_is_dynamic').addEventListener('change', function() {
+        const redirectContainer = document.getElementById('qr_redirect_container');
+        if (this.checked) {
+          redirectContainer.classList.remove('hidden');
+        } else {
+          redirectContainer.classList.add('hidden');
+        }
+      });
+    });
+
+    /*************************************************************
+     * Validation
+    *************************************************************/
+    function validateInput() {
+      const data = document.getElementById('barcode_data').value;
+      const barcodeType = document.getElementById('barcode_type').value;
+      const validationMsg = document.getElementById('barcode-data-validation');
+      if (!data) {
+        validationMsg.textContent = "Please enter data for the barcode";
+        validationMsg.classList.remove('hidden');
+        return false;
+      }
+      // EAN-13
+      if (barcodeType === 'ean13' && (!/^[0-9]+$/.test(data) || data.length !== 13)) {
+        validationMsg.textContent = "EAN-13 requires exactly 13 numeric digits";
+        validationMsg.classList.remove('hidden');
+        return false;
+      }
+      // EAN-8
+      if (barcodeType === 'ean8' && (!/^[0-9]+$/.test(data) || data.length !== 8)) {
+        validationMsg.textContent = "EAN-8 requires exactly 8 numeric digits";
+        validationMsg.classList.remove('hidden');
+        return false;
+      }
+      validationMsg.classList.add('hidden');
+      return true;
+    }
+
+    /*************************************************************
+     * Live Preview
+    *************************************************************/
+    function updateLivePreview() {
+      const data = document.getElementById('barcode_data').value;
+      const barcodeType = document.getElementById('barcode_type').value;
+      const livePreview = document.getElementById('live-preview');
+      const previewImg = document.getElementById('preview-img');
+      const placeholder = document.getElementById('preview-placeholder');
+      if (!data) {
+        livePreview.classList.add('hidden');
+        return;
+      }
+      livePreview.classList.remove('hidden');
+
+      // We simulate a preview using a server endpoint. Adjust as needed for your environment.
+      let previewUrl = `/barcode_preview?data=${encodeURIComponent(data)}&type=${barcodeType}`;
+      if (barcodeType === 'qrcode') {
+        const color = document.getElementById('qr_color').value.replace('#', '');
+        const bgColor = document.getElementById('qr_bg_color').value.replace('#', '');
+        previewUrl += `&color=${color}&bg=${bgColor}`;
+      }
+
+      // Show placeholder while loading
+      placeholder.classList.remove('hidden');
+      previewImg.classList.add('hidden');
+
+      const tempImg = new Image();
+      tempImg.onload = function() {
+        previewImg.src = this.src;
+        placeholder.classList.add('hidden');
+        previewImg.classList.remove('hidden');
+      };
+      tempImg.onerror = function() {
+        placeholder.classList.remove('hidden');
+        previewImg.classList.add('hidden');
+      };
+      tempImg.src = previewUrl;
+    }
+
+    /*************************************************************
+     * Barcode Type Info
+    *************************************************************/
+    function updateBarcodeTypeInfo(barcodeType) {
+      const infoElement = document.getElementById('barcode-type-info');
+      const typeInfoMap = {
+        'code128': 'Code 128: Alphanumeric data with high density',
+        'code39': 'Code 39: Alphanumeric data, common in industry',
+        'ean13': 'EAN-13: 13 digits, used worldwide for retail products',
+        'ean8': 'EAN-8: 8 digits, compact version of EAN-13',
+        'upca': 'UPC-A: 12 digits, primarily used in North America',
+        'qrcode': 'QR Code: 2D barcode with high capacity and error correction'
+      };
+      infoElement.textContent = typeInfoMap[barcodeType] || '';
+    }
+
+    /*************************************************************
+     * Dynamic QR Options
+    *************************************************************/
+    function toggleDynamicQROptions() {
+      const barcodeType = document.getElementById('barcode_type').value;
+      const dynamicQrOptions = document.getElementById('dynamic-qr-options');
+      if (barcodeType === 'qrcode') {
+        dynamicQrOptions.classList.remove('hidden');
+      } else {
+        dynamicQrOptions.classList.add('hidden');
+      }
+    }
+    function toggleRedirectUrlField() {
+      const redirectUrlField = document.getElementById('redirect-url-field');
+      if (this.checked) {
+        redirectUrlField.classList.remove('hidden');
+      } else {
+        redirectUrlField.classList.add('hidden');
+      }
+    }
+
+    /*************************************************************
+     * Toasts
+    *************************************************************/
+    function showToast(message, type = 'success', duration = 3000) {
+      const toastContainer = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      // Set style based on type
+      let bgColor, textColor, icon;
+      switch(type) {
+        case 'success':
+          bgColor = 'bg-green-100 dark:bg-green-800';
+          textColor = 'text-green-800 dark:text-green-100';
+          icon = 'check-circle';
+          break;
+        case 'error':
+          bgColor = 'bg-red-100 dark:bg-red-800';
+          textColor = 'text-red-800 dark:text-red-100';
+          icon = 'exclamation-circle';
+          break;
+        case 'warning':
+          bgColor = 'bg-yellow-100 dark:bg-yellow-800';
+          textColor = 'text-yellow-800 dark:text-yellow-100';
+          icon = 'exclamation-triangle';
+          break;
+        case 'info':
+          bgColor = 'bg-blue-100 dark:bg-blue-800';
+          textColor = 'text-blue-800 dark:text-blue-100';
+          icon = 'info-circle';
+          break;
+      }
+      toast.className = `mb-3 w-64 p-3 rounded-lg shadow-lg flex items-center ${bgColor} ${textColor} 
+                         transform translate-y-2 opacity-0 transition-all duration-300`;
+      toast.innerHTML = `
+        <i class="fas fa-${icon} mr-2"></i>
+        <div class="flex-1">${message}</div>
+        <button class="ml-auto" onclick="this.parentElement.remove()">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      toastContainer.appendChild(toast);
+
+      // Animate in
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+
+      // Remove after duration
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    /*************************************************************
+     * Generate Barcode
+    *************************************************************/
+    function generateBarcode() {
+      const data = document.getElementById('barcode_data').value;
+      const barcodeType = document.getElementById('barcode_type').value;
+      const barcodeSize = document.getElementById('barcode_size').value;
+      const barcodeName = document.getElementById('barcode_name').value;
+      
+      // Get dynamic options
+      const isDynamic = document.getElementById('barcode_is_dynamic').checked;
+      const redirectUrl = document.getElementById('barcode_redirect_url').value;
+
+      if (!data) {
+        showToast('Please enter data for the barcode', 'error');
+        return Promise.reject('No data');
+      }
+
+      // If dynamic is checked but no redirect URL is provided
+      if (isDynamic && !redirectUrl) {
+        showToast('Please enter a redirect URL for trackable barcodes', 'error');
+        return Promise.reject('No redirect URL');
+      }
+
+      console.log('Generating barcode with data:', data, 'Type:', barcodeType, 'Dynamic:', isDynamic);
+
+      // Example: call your Flask endpoint
+      return axios.post('/generate_barcode', {
+        data: data,
+        barcode_type: barcodeType,
+        barcode_size: barcodeSize,
+        barcode_name: barcodeName,
+        is_dynamic: isDynamic,
+        redirect_url: redirectUrl
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(function(response) {
+        const barcodeId = response.data.id;
+        const dynamicUrl = response.data.dynamic_url;
+
+        // Basic Info
+        document.getElementById('info-type').textContent = barcodeType.toUpperCase();
+        document.getElementById('info-data').textContent = data;
+        document.getElementById('info-created').textContent = new Date().toLocaleString();
+
+        // Show Result Area
+        document.getElementById('result-area').classList.remove('hidden');
+        
+        // Hide placeholder and show barcode image
+        document.getElementById('barcode-placeholder').classList.add('hidden');
+        document.getElementById('barcode-img').classList.remove('hidden');
+        
+        // Display success toast
+        if (isDynamic) {
+          showToast('Trackable barcode generated successfully!', 'success');
+          
+          // Show dynamic info if available
+          if (dynamicUrl) {
+            const dynamicInfoDiv = document.createElement('div');
+            dynamicInfoDiv.className = 'mt-4 p-3 bg-blue-50 dark:bg-blue-900 rounded-md';
+            dynamicInfoDiv.innerHTML = `
+              <h4 class="text-sm font-semibold text-blue-800 dark:text-blue-200">Tracking Enabled</h4>
+              <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                This barcode is trackable. Access tracking data in the Analytics tab.
+              </p>
+              <div class="mt-2 text-xs">
+                <span class="font-medium text-blue-700 dark:text-blue-300">Scan URL: </span>
+                <span class="font-mono bg-blue-100 dark:bg-blue-800 px-1 py-0.5 rounded">${window.location.origin}${dynamicUrl}</span>
+              </div>
+            `;
+            
+            // Add after the barcode info
+            const infoSection = document.querySelector('#result-area > div:first-child');
+            infoSection.appendChild(dynamicInfoDiv);
+          }
+        } else {
+          showToast('Barcode generated successfully!', 'success');
+        }
+
+        // Set the image
+        if (response.data.id === 0 && response.data.image_data) {
+          // For temporary barcodes with ID 0, use the image_data (base64) directly
+          document.getElementById('barcode-img').src = response.data.image_data;
+          document.getElementById('download-link').href = response.data.image_data;
+          document.getElementById('download-link').download = `barcode_temp_${Date.now()}.png`;
+          console.log("Using base64 image data for temporary barcode");
+        } else {
+          // For saved barcodes, use the URL with download parameter
+          const barcodeUrl = `/barcode/${barcodeId}`;
+          const downloadUrl = `${barcodeUrl}?download=true`;
+          document.getElementById('barcode-img').src = barcodeUrl;
+          document.getElementById('download-link').href = downloadUrl;
+          console.log("Using barcode URL:", barcodeUrl);
+        }
+      })
+      .catch(function(error) {
+        console.error('Error generating barcode:', error);
+        showToast('Error generating barcode. Please try again.', 'error');
+      });
+    }
+
+    /*************************************************************
+     * Validate QR Input
+    *************************************************************/
+    function validateQRInput() {
+      console.log("Validating QR input");
+      const qrType = document.getElementById('qr_type').value;
+      let isValid = true;
+      let errorMessage = "";
+      
+      // Create validation message element if it doesn't exist
+      let validationMsg = document.getElementById('qr-data-validation');
+      if (!validationMsg) {
+        validationMsg = document.createElement('div');
+        validationMsg.id = 'qr-data-validation';
+        validationMsg.className = 'text-sm text-red-600 dark:text-red-400 mt-1 hidden';
+        
+        // Find where to insert it
+        const qrForm = document.getElementById('qr-form-wrapper') || document.querySelector('.qr-code-form');
+        if (qrForm) {
+          qrForm.appendChild(validationMsg);
+        }
+      }
+      
+      // Validate based on QR type
+      switch(qrType) {
+        case 'text':
+          const textData = document.getElementById('qr_data');
+          if (!textData || !textData.value) {
+            errorMessage = "Please enter text content";
+            isValid = false;
+          }
+          break;
+          
+        case 'url':
+          const urlData = document.getElementById('qr_url');
+          if (!urlData || !urlData.value) {
+            errorMessage = "Please enter a URL";
+            isValid = false;
+          }
+          break;
+          
+        case 'email':
+          const email = document.getElementById('qr_email');
+          if (!email || !email.value) {
+            errorMessage = "Please enter an email address";
+            isValid = false;
+          }
+          break;
+          
+        case 'phone':
+          const phone = document.getElementById('qr_phone');
+          if (!phone || !phone.value) {
+            errorMessage = "Please enter a phone number";
+            isValid = false;
+          }
+          break;
+          
+        case 'sms':
+          const smsPhone = document.getElementById('qr_sms_number');
+          if (!smsPhone || !smsPhone.value) {
+            errorMessage = "Please enter a phone number for SMS";
+            isValid = false;
+          }
+          break;
+          
+        case 'wifi':
+          const ssid = document.getElementById('qr_wifi_ssid');
+          if (!ssid || !ssid.value) {
+            errorMessage = "Please enter a network name (SSID)";
+            isValid = false;
+          }
+          break;
+          
+        case 'vcard':
+          const firstname = document.getElementById('qr_vcard_firstname');
+          if (!firstname || !firstname.value) {
+            errorMessage = "Please enter a first name";
+            isValid = false;
+          }
+          break;
+          
+        case 'location':
+          const lat = document.getElementById('qr_location_lat');
+          const lng = document.getElementById('qr_location_lng');
+          if (!lat || !lat.value || !lng || !lng.value) {
+            errorMessage = "Please enter both latitude and longitude";
+            isValid = false;
+          }
+          break;
+      }
+      
+      // Check if dynamic option is selected but no redirect URL
+      const isDynamicEl = document.getElementById('qr_is_dynamic');
+      const redirectUrlEl = document.getElementById('qr_redirect_url');
+      
+      if (isDynamicEl && isDynamicEl.checked && redirectUrlEl && !redirectUrlEl.value) {
+        errorMessage = "Please enter a redirect URL for trackable QR codes";
+        isValid = false;
+      }
+      
+      // Display validation message if needed
+      if (validationMsg) {
+        if (!isValid) {
+          validationMsg.textContent = errorMessage;
+          validationMsg.classList.remove('hidden');
+          console.error("Validation failed:", errorMessage);
+        } else {
+          validationMsg.classList.add('hidden');
+          console.log("Validation passed");
+        }
+      } else {
+        console.warn("Validation message element not found");
+        if (!isValid) {
+          showToast(errorMessage, 'error');
+        }
+      }
+      
+      return isValid;
+    }
+
+    /*************************************************************
+     * TABS
+    *************************************************************/
+    function initTabs() {
+      const tabLinks = document.querySelectorAll('#tabs a');
+      const tabContents = document.querySelectorAll('.tab-content');
+      
+      // Show first tab by default
+      if (tabContents.length > 0) {
+        tabContents[0].classList.remove('hidden');
+        tabLinks[0].classList.add('border-primary-600', 'active');
+        tabLinks[0].classList.remove('border-transparent');
+      }
+
+      tabLinks.forEach(tabLink => {
+        tabLink.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Remove active states from all tabs
+          tabLinks.forEach(link => {
+            link.classList.remove('border-primary-600', 'active');
+            link.classList.add('border-transparent');
+          });
+          
+          // Add active state to clicked tab
+          this.classList.add('border-primary-600', 'active');
+          this.classList.remove('border-transparent');
+          
+          // Hide all tab contents
+          tabContents.forEach(content => {
+            content.classList.add('hidden');
+          });
+          
+          // Show target content
+          const targetId = this.getAttribute('data-target');
+          const targetContent = document.getElementById(targetId);
+          if (targetContent) {
+            targetContent.classList.remove('hidden');
+
+            // Initialize specific tab content if needed
+            switch(targetId) {
+              case 'history-tab':
+            loadRecentBarcodes();
+                break;
+              case 'analytics-tab':
+            populateAnalyticsSelector();
+                break;
+              case 'sequence-tab':
+                // Initialize sequence form if needed
+                const sequenceForm = document.getElementById('sequence-form');
+                if (sequenceForm) {
+                  sequenceForm.reset();
+                }
+                break;
+            }
+          }
+        });
+      });
+    }
+
+    /*************************************************************
+     * Generate QR Code
+    *************************************************************/
+    function generateQRCode() {
+      try {
+        console.log("generateQRCode function called");
+        
+        // Safely get elements and their values
+        function safeGetElement(id) {
+          const element = document.getElementById(id);
+          if (!element) {
+            console.error(`Element not found: ${id}`);
+            throw new Error(`Missing UI element: ${id}`);
+          }
+          return element;
+        }
+        
+        function safeGetValue(id) {
+          const element = safeGetElement(id);
+          return element.value || '';
+        }
+        
+        // Get QR type
+        const qrTypeElement = safeGetElement('qr_type');
+        const qrType = qrTypeElement.value;
+        console.log("QR Type:", qrType);
+        
+        // Get colors
+        const foreColor = safeGetValue('qr_color').replace('#', '');
+        const bgColor = safeGetValue('qr_bg_color').replace('#', '');
+        
+        // Get dynamic options
+        const isDynamicElement = safeGetElement('qr_is_dynamic');
+        const isDynamic = isDynamicElement.checked;
+        const redirectUrl = safeGetValue('qr_redirect_url');
+        
+        console.log("Is Dynamic:", isDynamic);
+        console.log("Redirect URL:", redirectUrl);
+        
+        // Create data object based on QR code type
+        let requestData = {
+          qr_type: qrType,
+          foreground: foreColor,
+          background: bgColor,
+          is_dynamic: isDynamic,
+          redirect_url: redirectUrl
+        };
+        
+        // Add data based on selected type
+        switch(qrType) {
+          case 'text':
+            requestData.data = safeGetValue('qr_data');
+            console.log("Text data:", requestData.data);
+            if (!requestData.data) {
+              showToast('Please enter text content', 'error');
+              return Promise.reject('No data');
+            }
+            break;
+            
+          case 'url':
+            requestData.url = safeGetValue('qr_url');
+            // For the backend API, the URL becomes the data
+            requestData.data = requestData.url;
+            if (!requestData.url) {
+              showToast('Please enter a URL', 'error');
+              return Promise.reject('No URL');
+            }
+            break;
+            
+          case 'email':
+            requestData.email = safeGetValue('qr_email');
+            requestData.subject = safeGetValue('qr_email_subject');
+            requestData.body = safeGetValue('qr_email_body');
+            // Format for email QR code: mailto:email@example.com?subject=Subject&body=Body
+            requestData.data = `mailto:${requestData.email}`;
+            if (requestData.subject) requestData.data += `?subject=${encodeURIComponent(requestData.subject)}`;
+            if (requestData.body) requestData.data += `${requestData.subject ? '&' : '?'}body=${encodeURIComponent(requestData.body)}`;
+            if (!requestData.email) {
+              showToast('Please enter an email address', 'error');
+              return Promise.reject('No email');
+            }
+            break;
+            
+          case 'phone':
+            requestData.phone = safeGetValue('qr_phone');
+            // Format for phone QR code: tel:+1234567890
+            requestData.data = `tel:${requestData.phone}`;
+            if (!requestData.phone) {
+              showToast('Please enter a phone number', 'error');
+              return Promise.reject('No phone');
+            }
+            break;
+            
+          case 'sms':
+            requestData.phone = safeGetValue('qr_sms_number');
+            requestData.message = safeGetValue('qr_sms_message');
+            // Format for SMS QR code: smsto:+1234567890:Message text
+            requestData.data = `smsto:${requestData.phone}:${requestData.message}`;
+            if (!requestData.phone) {
+              showToast('Please enter a phone number', 'error');
+              return Promise.reject('No phone');
+            }
+            break;
+            
+          case 'wifi':
+            requestData.ssid = safeGetValue('qr_wifi_ssid');
+            requestData.password = safeGetValue('qr_wifi_password');
+            requestData.encryption = safeGetValue('qr_wifi_type');
+            requestData.hidden = safeGetElement('qr_wifi_hidden').checked;
+            // Format for WiFi QR code: WIFI:T:WPA;S:MyNetwork;P:MyPassword;;
+            requestData.data = `WIFI:T:${requestData.encryption};S:${requestData.ssid};P:${requestData.password};H:${requestData.hidden ? 'true' : 'false'};;`;
+            if (!requestData.ssid) {
+              showToast('Please enter a network name (SSID)', 'error');
+              return Promise.reject('No SSID');
+            }
+            break;
+            
+          case 'vcard':
+            requestData.firstname = safeGetValue('qr_vcard_firstname');
+            requestData.lastname = safeGetValue('qr_vcard_lastname');
+            requestData.phone = safeGetValue('qr_vcard_phone');
+            requestData.email = safeGetValue('qr_vcard_email');
+            requestData.org = safeGetValue('qr_vcard_org');
+            requestData.url = safeGetValue('qr_vcard_url');
+            // Format for vCard QR code: BEGIN:VCARD\nVERSION:3.0\nN:Last;First\nFN:First Last\nORG:Company\nTEL:+1234567890\nEMAIL:user@example.com\nURL:http://www.example.com\nEND:VCARD
+            
+            // Escape special characters in vCard fields
+            const escapeVCard = (val) => {
+              if (!val) return '';
+              // Replace commas, semicolons, and backslashes with escaped versions
+              return val.replace(/([,;\\])/g, '\\$1');
+            };
+
+            // Build properly formatted vCard string
+            let vCardLines = [
+              'BEGIN:VCARD',
+              'VERSION:3.0',
+              `N:${escapeVCard(requestData.lastname)};${escapeVCard(requestData.firstname)};;`,
+              `FN:${escapeVCard(requestData.firstname)} ${escapeVCard(requestData.lastname)}`
+            ];
+            
+            if (requestData.org) vCardLines.push(`ORG:${escapeVCard(requestData.org)}`);
+            if (requestData.phone) vCardLines.push(`TEL:${escapeVCard(requestData.phone)}`);
+            if (requestData.email) vCardLines.push(`EMAIL:${escapeVCard(requestData.email)}`);
+            if (requestData.url) {
+              // Ensure URL has correct protocol
+              let urlValue = requestData.url;
+              if (urlValue && !urlValue.startsWith('http://') && !urlValue.startsWith('https://')) {
+                urlValue = 'https://' + urlValue;
+              }
+              vCardLines.push(`URL:${escapeVCard(urlValue)}`);
+            }
+            vCardLines.push('END:VCARD');
+            
+            requestData.data = vCardLines.join('\r\n');
+            
+            if (!requestData.firstname) {
+              showToast('Please enter a first name', 'error');
+              return Promise.reject('No firstname');
+            }
+            break;
+            
+          case 'location':
+            requestData.latitude = safeGetValue('qr_location_lat');
+            requestData.longitude = safeGetValue('qr_location_lng');
+            // Format for location QR code: geo:latitude,longitude
+            requestData.data = `geo:${requestData.latitude},${requestData.longitude}`;
+            if (!requestData.latitude || !requestData.longitude) {
+              showToast('Please enter latitude and longitude', 'error');
+              return Promise.reject('No coordinates');
+            }
+            break;
+        }
+
+        // If dynamic is checked but no redirect URL is provided
+        if (isDynamic && !redirectUrl) {
+          showToast('Please enter a redirect URL for trackable QR codes', 'error');
+          return Promise.reject('No redirect URL');
+        }
+
+        console.log('Sending QR data:', JSON.stringify(requestData));
+
+        // Track the request time
+        const startTime = Date.now();
+        
+        // Call your Flask endpoint
+        return axios({
+          method: 'post',
+          url: '/generate_qrcode',
+          data: requestData,
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(function(response) {
+          console.log('QR Code response received after', Date.now() - startTime, 'ms:', response.data);
+          
+          // Modified validation logic - don't require id to be non-zero
+          if (!response.data || response.data.id === undefined || !response.data.image_data) {
+            console.error('Invalid server response:', response.data);
+            throw new Error('Invalid response from server');
+          }
+          
+          const qrId = response.data.id;
+          const dynamicUrl = response.data.dynamic_url;
+
+          // Show Result Area
+          document.getElementById('qr-result-area').classList.remove('hidden');
+          
+          // Hide placeholder and show QR image
+          document.getElementById('qr-placeholder').classList.add('hidden');
+          document.getElementById('qr-img').classList.remove('hidden');
+          
+          // Set basic info
+          document.getElementById('qr-info-type').textContent = qrType.toUpperCase();
+          document.getElementById('qr-info-created').textContent = new Date().toLocaleString();
+          
+          // Set appropriate data info based on QR type
+          switch(qrType) {
+            case 'text':
+              document.getElementById('qr-info-data').textContent = requestData.data || '-';
+              break;
+            case 'url':
+              document.getElementById('qr-info-data').textContent = requestData.url;
+              break;
+            case 'email':
+              document.getElementById('qr-info-data').textContent = requestData.email;
+              break;
+            case 'phone':
+              document.getElementById('qr-info-data').textContent = requestData.phone;
+              break;
+            case 'sms':
+              document.getElementById('qr-info-data').textContent = `${requestData.phone} (SMS)`;
+              break;
+            case 'wifi':
+              document.getElementById('qr-info-data').textContent = `WiFi: ${requestData.ssid}`;
+              break;
+            case 'vcard':
+              document.getElementById('qr-info-data').textContent = `Contact: ${requestData.firstname} ${requestData.lastname}`;
+              break;
+            case 'location':
+              document.getElementById('qr-info-data').textContent = `Location: ${requestData.latitude}, ${requestData.longitude}`;
+              break;
+          }
+          
+          // Display success toast and dynamic info if applicable
+          if (isDynamic) {
+            showToast('Trackable QR code generated successfully!', 'success');
+            
+            // Add dynamic info if available
+            if (dynamicUrl) {
+              // Add tracking info display
+              const scanUrl = `${window.location.origin}${dynamicUrl}`;
+              const infoSection = document.querySelector('#qr-result-area > div:first-child');
+              
+              // Remove any existing tracking info before adding new
+              const existingDynamicInfo = infoSection.querySelector('.dynamic-tracking-info');
+              if (existingDynamicInfo) {
+                existingDynamicInfo.remove();
+              }
+              
+              const dynamicInfoDiv = document.createElement('div');
+              dynamicInfoDiv.className = 'mt-4 p-3 bg-blue-50 dark:bg-blue-900 rounded-md dynamic-tracking-info';
+              dynamicInfoDiv.innerHTML = `
+                <h4 class="text-sm font-semibold text-blue-800 dark:text-blue-200">Tracking Enabled</h4>
+                <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                  This QR code is trackable. Access tracking data in the Analytics tab.
+                </p>
+                <div class="mt-2 text-xs">
+                  <span class="font-medium text-blue-700 dark:text-blue-300">Scan URL: </span>
+                  <span class="font-mono bg-blue-100 dark:bg-blue-800 px-1 py-0.5 rounded">${scanUrl}</span>
+                </div>
+              `;
+              
+              infoSection.appendChild(dynamicInfoDiv);
+            }
+          } else {
+            showToast('QR code generated successfully!', 'success');
+          }
+
+          // Set the image
+          if (qrId === 0 && response.data.image_data) {
+            // For temporary QR codes with ID 0, use the image_data (base64) directly
+            document.getElementById('qr-img').src = response.data.image_data;
+            document.getElementById('qr-download-link').href = response.data.image_data;
+            document.getElementById('qr-download-link').download = `qrcode_temp_${Date.now()}.png`;
+          } else {
+            // For saved QR codes, use the URL with download parameter
+            const qrUrl = `/qrcode/${qrId}`;
+            const downloadUrl = `${qrUrl}?download=true`;
+            document.getElementById('qr-img').src = qrUrl;
+            document.getElementById('qr-download-link').href = downloadUrl;
+          }
+          
+          return response.data;
+        })
+        .catch(function(error) {
+          console.error('Error generating QR code:', error);
+          document.getElementById('qr-placeholder').classList.remove('hidden');
+          document.getElementById('qr-img').classList.add('hidden');
+          
+          // Show more detailed error message
+          let errorMsg = 'Error generating QR code. Please try again.';
+          if (error.response && error.response.data && error.response.data.error) {
+            errorMsg = `Error: ${error.response.data.error}`;
+          }
+          
+          showToast(errorMsg, 'error');
+          return Promise.reject(error);
+        });
+      } catch (err) {
+        console.error('Unexpected error in QR code generation function:', err);
+        showToast('Unexpected error with QR code generation. Please try again.', 'error');
+        return Promise.reject(err);
+      }
+    }
+
+    /*************************************************************
+     * Reset QR Form
+    *************************************************************/
+    function resetQRForm() {
+      document.getElementById('qr_data').value = '';
+      document.getElementById('qr-data-validation').classList.add('hidden');
+      document.getElementById('qr-info-data').textContent = '-';
+      document.getElementById('qr-info-created').textContent = '-';
+      document.getElementById('qr-result-area').classList.add('hidden');
+      document.getElementById('qr-img').classList.add('hidden');
+      document.getElementById('qr-placeholder').classList.remove('hidden');
+      showToast('New QR code form ready', 'info');
+    }
+
+    /*************************************************************
+     * Sequence Generation
+    *************************************************************/
+    function generateSequence() {
+        // Get form values
+        const prefix = document.getElementById('seq_prefix')?.value || '';
+        const startNum = parseInt(document.getElementById('seq_start')?.value || '1');
+        const count = parseInt(document.getElementById('seq_count')?.value || '10');
+        const padLength = parseInt(document.getElementById('seq_pad')?.value || '0');
+        const suffix = document.getElementById('seq_suffix')?.value || '';
+        const barcodeType = document.getElementById('seq_type')?.value || 'code128';
+
+        // Validate inputs
+        if (count < 1 || count > 1000) {
+            showToast('Count must be between 1 and 1000', 'error');
+            return;
+        }
+
+        if (padLength < 0 || padLength > 20) {
+            showToast('Padding length must be between 0 and 20', 'error');
+        return;
+      }
+
+      // Show loading state
+      const generateBtn = document.getElementById('generate-sequence-btn');
+        if (generateBtn) {
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Generating...';
+        }
+
+        // Make API request
+        axios.post('/api/generate_sequence', {
+        prefix,
+            start: startNum,
+            count,
+            pad_length: padLength,
+        barcode_type: barcodeType,
+            suffix,
+            save_to_system: false
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(response => {
+        const results = response.data;
+            if (!results || !results.sequence_data || results.sequence_data.length === 0) {
+          showToast('No sequence generated', 'warning');
+          return;
+        }
+
+        // Display results
+        const seqResultsDiv = document.getElementById('sequence-results');
+        const seqList = document.getElementById('sequence-list');
+            if (seqList) {
+        seqList.innerHTML = '';
+        
+                results.sequence_data.forEach(item => {
+          const li = document.createElement('li');
+          li.className = 'mb-2 p-2 border rounded';
+          
+          // Create barcode image element
+          const img = document.createElement('img');
+                    img.src = `data:image/png;base64,${item.image_data}`;
+                    img.alt = `Barcode for ${item.data}`;
+          img.className = 'mb-2';
+          
+          // Create code text element
+          const codeText = document.createElement('div');
+                    codeText.textContent = item.data;
+          codeText.className = 'text-sm text-gray-600';
+          
+          li.appendChild(img);
+          li.appendChild(codeText);
+          seqList.appendChild(li);
+        });
+            }
+
+            if (seqResultsDiv) {
+        seqResultsDiv.classList.remove('hidden');
+            }
+        showToast('Sequence generated successfully!', 'success');
+      })
+      .catch(err => {
+        console.error('Error generating sequence:', err);
+        showToast('Failed to generate sequence', 'error');
+      })
+      .finally(() => {
+        // Reset button state
+        const generateBtn = document.getElementById('generate-sequence-btn');
+            if (generateBtn) {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = 'Generate Sequence';
+            }
+        });
+    }
+    
+    /*************************************************************
+     * Analytics
+     * Draw Analytics Chart
+    *************************************************************/
+    function drawAnalyticsChart(scansByDay) {
+      const ctx = document.getElementById('analytics-chart').getContext('2d');
+      
+      // Destroy old chart if exists
+      if (analyticsChart) {
+        analyticsChart.destroy();
+      }
+      
+      // Get dates for last 30 days
+      const dates = [];
+      const scanCounts = [];
+      
+      const today = new Date();
+      
+      // Fill data for the last 30 days
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        
+        const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD
+        dates.push(dateString);
+        scanCounts.push(scansByDay[dateString] || 0);
+      }
+      
+      // Create gradient for chart
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');  // Blue 500 with transparency
+      gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');  // Transparent
+      
+      // Format dates for display
+      const formattedDates = dates.map(date => {
+        const d = new Date(date);
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      });
+      
+      // Create the chart
+      analyticsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: formattedDates,
+          datasets: [{
+            label: 'Scans',
+            data: scanCounts,
+            borderColor: 'rgba(59, 130, 246, 1)',  // Blue 500
+            backgroundColor: gradient,
+            borderWidth: 2,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              backgroundColor: 'rgba(17, 24, 39, 0.8)',  // Gray 900 with transparency
+              titleFont: {
+                size: 13
+              },
+              bodyFont: {
+                size: 13
+              },
+              padding: 10,
+              callbacks: {
+                title: function(tooltipItems) {
+                  return tooltipItems[0].label;
+                },
+                label: function(context) {
+                  return 'Scans: ' + context.parsed.y;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                maxRotation: 45,
+                minRotation: 45
+              }
+            },
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(156, 163, 175, 0.1)'  // Gray 400 with transparency
+              },
+              ticks: {
+                precision: 0,
+                stepSize: 1
+              }
+            }
+          }
+        }
+      });
+    }
+
+    /*************************************************************
+     * Reset Barcode Form
+    *************************************************************/
+    function resetBarcodeForm() {
+      document.getElementById('barcode_data').value = '';
+      document.getElementById('barcode-data-validation').classList.add('hidden');
+      document.getElementById('info-data').textContent = '-';
+      document.getElementById('info-created').textContent = '-';
+      document.getElementById('result-area').classList.add('hidden');
+      document.getElementById('barcode-img').classList.add('hidden');
+      document.getElementById('barcode-placeholder').classList.remove('hidden');
+      showToast('New barcode form ready', 'info');
+    }
+
+    /*************************************************************
+     * loadRecentBarcodes() -> History Tab
+    *************************************************************/
+    function loadRecentBarcodes() {
+      // Example: GET /barcodes
+      axios.get('/barcodes')
+        .then(response => {
+          const data = response.data;
+          const barcodes = data.barcodes || []; // Access barcodes array from response
+          const historyBody = document.getElementById('history-body');
+          const historyEmpty = document.getElementById('history-empty');
+          
+          // Clear old rows
+          historyBody.innerHTML = '';
+
+          if (!barcodes || barcodes.length === 0) {
+            historyEmpty.classList.remove('hidden');
+            return;
+          } else {
+            historyEmpty.classList.add('hidden');
+          }
+
+          barcodes.forEach(b => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td class="px-4 py-2">${b.id}</td>
+              <td class="px-4 py-2">${b.barcode_type}</td>
+              <td class="px-4 py-2 break-all">${b.data}</td>
+              <td class="px-4 py-2">${new Date(b.created_at).toLocaleString()}</td>
+            `;
+            historyBody.appendChild(row);
+          });
+        })
+        .catch(err => {
+          console.error('Error loading history:', err);
+        });
+    }
+
+    /*************************************************************
+     * populateAnalyticsSelector() -> Analytics Tab
+    *************************************************************/
+    function populateAnalyticsSelector() {
+      // Example: GET /barcodes so user can pick which to analyze
+      axios.get('/barcodes')
+        .then(response => {
+          const data = response.data;
+          const barcodes = data.barcodes || []; // Access barcodes array from response
+          const selector = document.getElementById('analytics_barcode_select');
+          selector.innerHTML = ''; // clear old options
+
+          if (!barcodes || barcodes.length === 0) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = 'No Barcodes Available';
+            selector.appendChild(opt);
+            return;
+          }
+
+          barcodes.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b.id;
+            opt.textContent = `#${b.id} - ${b.barcode_type} - ${b.data}`;
+            selector.appendChild(opt);
+          });
+        })
+        .catch(err => {
+          console.error('Error loading barcodes for analytics:', err);
+        });
+    }
+
+    // Make sure DOM is fully loaded before accessing elements
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize tabs first
+      initTabs();
+      
+      // Initialize other components
+      initQRTypeSelector();
+      populateAnalyticsSelector();
+      
+      // Set up tab event listeners
+      document.querySelectorAll('#tabs a').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+          const targetId = this.getAttribute('data-target');
+          if (targetId === 'analytics-tab') {
+            populateAnalyticsSelector();
+          }
+        });
+      });
+      
+      console.log("Document ready - all scripts initialized");
+    });
+
+    /*************************************************************
+     * Initialize QR Type Selector
+    *************************************************************/
+    function initQRTypeSelector() {
+      // Make sure QR type element exists
+      const qrTypeSelect = document.getElementById('qr_type');
+      if (!qrTypeSelect) {
+        console.warn("QR type selector not found in DOM");
+        return;
+      }
+      
+      console.log("Initializing QR type selector");
+      
+      // Hide all specific inputs initially except for text
+      const allInputContainers = document.querySelectorAll('.qr-type-input');
+      allInputContainers.forEach(container => {
+        if (container.id !== 'qr-text-input') {
+          container.classList.add('hidden');
+        }
+      });
+      
+      // Add change handler if not already present
+      if (!qrTypeSelect._hasChangeHandler) {
+        qrTypeSelect.addEventListener('change', function() {
+          const selectedType = this.value;
+          console.log("QR Type changed to:", selectedType);
+          
+          // Hide all input containers
+          document.querySelectorAll('.qr-type-input').forEach(container => {
+            container.classList.add('hidden');
+          });
+          
+          // Show the selected input container
+          const selectedContainer = document.getElementById(`qr-${selectedType}-input`);
+          if (selectedContainer) {
+            selectedContainer.classList.remove('hidden');
+          } else {
+            console.warn(`Container for QR type '${selectedType}' not found`);
+          }
+        });
+        
+        qrTypeSelect._hasChangeHandler = true;
+      }
+      
+      // Also initialize dynamic checkbox handler
+      const isDynamicCheckbox = document.getElementById('qr_is_dynamic');
+      const redirectUrlContainer = document.getElementById('qr_redirect_container');
+      
+      if (isDynamicCheckbox && redirectUrlContainer) {
+        if (!isDynamicCheckbox._hasChangeHandler) {
+          isDynamicCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+              redirectUrlContainer.classList.remove('hidden');
+            } else {
+              redirectUrlContainer.classList.add('hidden');
+            }
+          });
+          
+          isDynamicCheckbox._hasChangeHandler = true;
+        }
+        
+        // Initial state
+        redirectUrlContainer.classList.toggle('hidden', !isDynamicCheckbox.checked);
+      }
+    }
+  </script>
+  
+  <!-- Error handling for external scripts -->
+  <script src="/static/js/error-handler.js"></script>
+  
+  <!-- Axios for AJAX requests -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  
+  <!-- Barcode Application JavaScript -->
+  <script src="/static/js/barcodeApp.js"></script>
+  
+  <!-- Debug Script for Sequence Generator -->
+  <script>
+    // Add debugging to sequence form submission
+    document.addEventListener('DOMContentLoaded', function() {
+      const sequenceForm = document.getElementById('sequence-form');
+      if (sequenceForm) {
+        console.log('Adding debug wrapper to sequence form');
+        // Store original event listener
+        const originalSubmit = sequenceForm.onsubmit;
+        
+        // Create new submit handler
+        sequenceForm.onsubmit = function(e) {
+          console.log('Sequence form submitted');
+          e.preventDefault();
+          
+          // Get form values for debugging
+          const prefix = document.getElementById('seq_prefix')?.value || '';
+          const startNum = parseInt(document.getElementById('seq_start')?.value || '1');
+          const count = parseInt(document.getElementById('seq_count')?.value || '10');
+          const padLength = parseInt(document.getElementById('seq_pad')?.value || '0');
+          const suffix = document.getElementById('seq_suffix')?.value || '';
+          const barcodeType = document.getElementById('seq_type')?.value || 'code128';
+          
+          console.log('Sequence form values:', { prefix, startNum, count, padLength, suffix, barcodeType });
+          
+          // Continue with original handler (generateSequence)
+          generateSequence();
+          
+          // Add extra debug output
+          setTimeout(function() {
+            // Check results
+            const resultsContainer = document.getElementById('sequence-results');
+            if (resultsContainer) {
+              console.log('Results container HTML:', resultsContainer.innerHTML.substring(0, 100) + '...');
+              console.log('Results container children:', resultsContainer.children.length);
+            }
+          }, 2000);
+        };
+      }
+    });
+  </script>
+  
+  <!-- Error handler should be loaded first -->
+  <script src="{{ url_for('static', filename='js/error-handler.js') }}"></script>
+  
+  <!-- Main application scripts -->
+  <script src="{{ url_for('static', filename='js/barcodeApp.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sequence_generator.js') }}"></script>
+  
+  <!-- Preview generation script -->
+  <script src="{{ url_for('static', filename='js/preview-generator.js') }}"></script>
+  
+  <!-- Theme switcher script -->
+  <script src="{{ url_for('static', filename='js/theme-switcher.js') }}"></script>
+  
+  <!-- Batch processor script -->
+  <script src="{{ url_for('static', filename='js/batch-processor.js') }}"></script>
+  
+  <!-- Camera scanner script -->
+  <script src="{{ url_for('static', filename='js/camera-scanner.js') }}"></script>
+  
+  <!-- Debug script to catch 404 errors -->
+  <script>
+      // Intercept fetch and XMLHttpRequests to debug 404 errors
+      (function() {
+          // Store original fetch function
+          const originalFetch = window.fetch;
+          
+          // Override fetch to log URLs with negative IDs
+          window.fetch = function() {
+              const url = arguments[0];
+              if (typeof url === 'string' && (url.includes('/barcode/-') || url.includes('/qrcode/-'))) {
+                  console.error('Intercepted fetch to negative ID URL:', url);
+                  console.trace('Fetch call stack');
+                  // Return a mock response instead of making the actual request
+                  if (url.includes('/barcode/-')) {
+                      return Promise.resolve(new Response(JSON.stringify({
+                          error: 'Debug: This is a temporary barcode that should use base64 image data instead of fetching from server',
+                          message: 'Non-logged in users cannot access saved barcodes. Please log in to save barcodes.'
+                      }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+                  }
+              }
+              return originalFetch.apply(this, arguments);
+          };
+          
+          // Debug image errors
+          document.addEventListener('error', function(event) {
+              const target = event.target;
+              if (target.tagName === 'IMG') {
+                  const src = target.src || '';
+                  if (src.includes('/barcode/-') || src.includes('/qrcode/-')) {
+                      console.error('Image loading error for:', src);
+                      console.trace('Image error stack');
+                      // Prevent default error handling
+                      event.preventDefault();
+                      // Optional: Set a fallback image
+                      target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNnB4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZmlsbD0iIzg4OCIgdGV4dC1sZW5ndGg9IjE4MCI+VGVtcG9yYXJ5IGJhcmNvZGU8L3RleHQ+PC9zdmc+';
+                  }
+              }
+          }, true);
+      })();
+  </script>
+  
+  <!-- Background color script -->
+  <script>
+    // Ensure background is white
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get the body element
+      const body = document.querySelector('body');
+      
+      // Remove the bg-gray-50 and dark:bg-gray-900 classes
+      body.classList.remove('bg-gray-50');
+      body.classList.remove('dark:bg-gray-900');
+      
+      // Add the style background white
+      body.style.backgroundColor = 'white';
+    });
+  </script>
+</body>
+</html>

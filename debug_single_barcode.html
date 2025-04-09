@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Single Barcode</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .barcode-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            max-height: 200px;
+            margin: 10px 0;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #log {
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Single Barcode Display</h1>
+    <button id="generate-btn">Generate Single Test Barcode</button>
+    
+    <div id="barcode-container" class="barcode-container" style="display: none;">
+        <h2>Generated Barcode</h2>
+        <p id="barcode-data"></p>
+        <img id="barcode-img" src="" alt="Generated barcode">
+    </div>
+    
+    <div id="log"></div>
+    
+    <script>
+        // Log function
+        function log(message) {
+            const logEl = document.getElementById('log');
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0];
+            logEl.innerHTML += `[${timeStr}] ${message}<br>`;
+        }
+        
+        // Generate a single test barcode
+        async function generateSingleBarcode() {
+            log('Generating single test barcode...');
+            
+            const barcodeContainer = document.getElementById('barcode-container');
+            const barcodeData = document.getElementById('barcode-data');
+            const barcodeImg = document.getElementById('barcode-img');
+            
+            try {
+                // API request
+                const response = await fetch('http://127.0.0.1:5000/generate_sequence', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prefix: 'TEST',
+                        start: 1,
+                        count: 1, // Just generate one barcode
+                        pad_length: 3,
+                        barcode_type: 'code128',
+                        suffix: '-DEBUG',
+                        save_to_system: false
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                log('API response received');
+                log(`Success: ${data.success}, Count: ${data.count}`);
+                
+                // Check if we have sequence data
+                if (data.sequence_data && data.sequence_data.length > 0) {
+                    const barcode = data.sequence_data[0];
+                    log(`Barcode data: ${barcode.data}`);
+                    
+                    // Update UI
+                    barcodeData.textContent = barcode.data;
+                    barcodeImg.src = barcode.image_data;
+                    barcodeContainer.style.display = 'block';
+                    
+                    // Show raw image data (truncated)
+                    log(`Image data: ${barcode.image_data.substring(0, 50)}...`);
+                    
+                    // Try creating a downloadable link
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = barcode.image_data;
+                    downloadLink.download = `barcode-${barcode.data}.png`;
+                    downloadLink.textContent = 'Download Barcode';
+                    downloadLink.style.display = 'block';
+                    downloadLink.style.marginTop = '10px';
+                    downloadLink.className = 'download-link';
+                    
+                    // Add to container
+                    barcodeContainer.appendChild(downloadLink);
+                    
+                    return true;
+                } else {
+                    log('Error: No barcode data in response');
+                    return false;
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`);
+                return false;
+            }
+        }
+        
+        // Set up event listener
+        document.getElementById('generate-btn').addEventListener('click', generateSingleBarcode);
+    </script>
+</body>
+</html> 

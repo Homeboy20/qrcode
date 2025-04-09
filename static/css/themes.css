@@ -1,0 +1,215 @@
+/**
+ * Theme Styles for Barcode Generator
+ * Light and Dark mode color schemes
+ */
+
+:root {
+    /* Base colors - light theme */
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: rgb(44, 138, 253);
+    --color-bg-tertiary: rgb(255, 255, 255);
+    --color-bg-accent: #3b82f6;
+    
+    --color-text-primary: #1f2937;
+    --color-text-secondary: #4b5563;
+    --color-text-tertiary: #6b7280;
+    --color-text-accent: #2563eb;
+    
+    --color-border-primary: #e5e7eb;
+    --color-border-secondary: #d1d5db;
+    --color-border-accent: #3b82f6;
+    
+    /* Form elements */
+    --color-input-bg: #ffffff;
+    --color-input-border: #d1d5db;
+    --color-input-focus: #3b82f6;
+    
+    /* Buttons */
+    --color-btn-primary-bg: #3b82f6;
+    --color-btn-primary-text: #ffffff;
+    --color-btn-primary-hover: #2563eb;
+    
+    --color-btn-secondary-bg: #f3f4f6;
+    --color-btn-secondary-text: #4b5563;
+    --color-btn-secondary-hover: #d1d5db;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.05);
+    
+    /* Transitions */
+    --transition-standard: all 0.2s ease-in-out;
+}
+
+/* Dark theme */
+.dark-theme {
+    --color-bg-primary: #111827;
+    --color-bg-secondary: #1f2937;
+    --color-bg-tertiary: #374151;
+    --color-bg-accent: #3b82f6;
+    
+    --color-text-primary: #f9fafb;
+    --color-text-secondary: #e5e7eb;
+    --color-text-tertiary: #d1d5db;
+    --color-text-accent: #60a5fa;
+    
+    --color-border-primary: #374151;
+    --color-border-secondary: #4b5563;
+    --color-border-accent: #3b82f6;
+    
+    /* Form elements */
+    --color-input-bg: #1f2937;
+    --color-input-border: #4b5563;
+    --color-input-focus: #3b82f6;
+    
+    /* Buttons remain mostly the same for consistency */
+    --color-btn-primary-bg: #3b82f6;
+    --color-btn-primary-text: #ffffff;
+    --color-btn-primary-hover: #2563eb;
+    
+    --color-btn-secondary-bg: #374151;
+    --color-btn-secondary-text: #e5e7eb;
+    --color-btn-secondary-hover: #4b5563;
+    
+    /* Shadows are more subtle in dark mode */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Application of theme variables */
+
+/* Background colors */
+body {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-primary);
+    transition: var(--transition-standard);
+}
+
+.bg-primary {
+    background-color: var(--color-bg-primary);
+}
+
+.bg-secondary {
+    background-color: var(--color-bg-secondary);
+}
+
+.bg-tertiary {
+    background-color: var(--color-bg-tertiary);
+}
+
+.bg-accent {
+    background-color: var(--color-bg-accent);
+}
+
+/* Text colors */
+.text-primary {
+    color: var(--color-text-primary);
+}
+
+.text-secondary {
+    color: var(--color-text-secondary);
+}
+
+.text-tertiary {
+    color: var(--color-text-tertiary);
+}
+
+.text-accent {
+    color: var(--color-text-accent);
+}
+
+/* Borders */
+.border-primary {
+    border-color: var(--color-border-primary);
+}
+
+.border-secondary {
+    border-color: var(--color-border-secondary);
+}
+
+.border-accent {
+    border-color: var(--color-border-accent);
+}
+
+/* Forms */
+input, select, textarea {
+    background-color: var(--color-input-bg);
+    color: var(--color-text-primary);
+    border-color: var(--color-input-border);
+    transition: var(--transition-standard);
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--color-input-focus);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Cards */
+.card {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-primary);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-standard);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--color-btn-primary-bg);
+    color: var(--color-btn-primary-text);
+    transition: var(--transition-standard);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--color-btn-primary-hover);
+}
+
+.btn-secondary {
+    background-color: var(--color-btn-secondary-bg);
+    color: var(--color-btn-secondary-text);
+    transition: var(--transition-standard);
+}
+
+.btn-secondary:hover, .btn-secondary:focus {
+    background-color: var(--color-btn-secondary-hover);
+}
+
+/* Tabs */
+.tab-container {
+    border-color: var(--color-border-primary);
+}
+
+.tab-item {
+    color: var(--color-text-secondary);
+    transition: var(--transition-standard);
+}
+
+.tab-item:hover {
+    color: var(--color-text-accent);
+}
+
+.tab-item.active {
+    color: var(--color-text-accent);
+    border-color: var(--color-border-accent);
+}
+
+/* Specific components */
+.sequence-container {
+    background-color: var(--color-bg-primary);
+    border-color: var(--color-border-primary);
+}
+
+.sequence-form {
+    background-color: var(--color-bg-secondary);
+}
+
+.sequence-barcode-container {
+    background-color: var(--color-bg-primary);
+    border-color: var(--color-border-primary);
+} 

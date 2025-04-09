@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequence Generator - Barcode & QR Code System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sequence.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1><a href="{{ url_for('home') }}">Barcode Generator</a></h1>
+                </div>
+                <nav class="main-nav">
+                    <ul>
+                        <li><a href="{{ url_for('home') }}">Home</a></li>
+                        <li><a href="{{ url_for('test_barcode_generation') }}">Generate Barcode</a></li>
+                        <li class="active"><a href="{{ url_for('sequence_generator') }}">Sequence Generator</a></li>
+                        {% if current_user.is_authenticated %}
+                            <li><a href="{{ url_for('user_area') }}">My Account</a></li>
+                            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                        {% else %}
+                            <li><a href="{{ url_for('login') }}">Login</a></li>
+                            <li><a href="{{ url_for('register') }}">Register</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-intro">
+                <h1>Barcode Sequence Generator</h1>
+                <p>Generate a sequence of barcodes with incremental numbers. Use the form below to configure your sequence.</p>
+            </div>
+
+            <!-- This is the container where our JS will inject the sequence generator UI -->
+            <div id="sequence-generator-container"></div>
+            
+            <!-- Authentication status for JS to use -->
+            <script>
+                window.authStatus = {
+                    isAuthenticated: {% if current_user.is_authenticated %}true{% else %}false{% endif %},
+                    {% if current_user.is_authenticated %}
+                    userId: {{ current_user.id }},
+                    userEmail: "{{ current_user.email }}"
+                    {% endif %}
+                };
+            </script>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="copyright">
+                    &copy; {{ current_year }} Barcode Generator. All rights reserved.
+                </div>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Contact Us</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Include the sequence generator JS -->
+    <script src="{{ url_for('static', filename='js/sequence_generator.js') }}"></script>
+</body>
+</html> 

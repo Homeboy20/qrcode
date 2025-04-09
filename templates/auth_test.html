@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <style>
+        /* Auth methods tab styling */
+        .auth-tab.active {
+            border-bottom: 2px solid #2563eb;
+            color: #2563eb;
+        }
+        .auth-pane {
+            display: none;
+        }
+        .auth-pane.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen transition-colors duration-300 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-blue-600 flex items-center justify-center">
+                <i class="fas fa-vial mr-3 text-blue-600"></i>
+                Auth Tabs Test
+            </h1>
+            <p class="mt-2 text-gray-600">Testing authentication tab functionality</p>
+        </div>
+        
+        <div class="bg-white shadow-xl rounded-lg px-8 pt-6 pb-8 mb-4">
+            <!-- Auth Method Tabs -->
+            <div class="flex mb-6 border-b border-gray-200">
+                <button id="email-tab" class="auth-tab py-2 px-4 font-medium text-sm focus:outline-none">
+                    <i class="fas fa-envelope mr-2"></i>Email
+                </button>
+                <button id="phone-tab" class="auth-tab py-2 px-4 font-medium text-sm focus:outline-none">
+                    <i class="fas fa-phone mr-2"></i>Phone
+                </button>
+                <button id="password-tab" class="auth-tab py-2 px-4 font-medium text-sm focus:outline-none">
+                    <i class="fas fa-lock mr-2"></i>Password
+                </button>
+            </div>
+            
+            <!-- Email Authentication -->
+            <div id="email-auth" class="auth-pane">
+                <p class="text-sm text-gray-600 mb-4">Email tab content</p>
+                <div class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded text-center">
+                    <i class="fas fa-envelope mr-2"></i>Email Tab Working
+                </div>
+            </div>
+            
+            <!-- Phone Authentication -->
+            <div id="phone-auth" class="auth-pane">
+                <p class="text-sm text-gray-600 mb-4">Phone tab content</p>
+                <div class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded text-center">
+                    <i class="fas fa-phone mr-2"></i>Phone Tab Working
+                </div>
+                <div id="recaptcha-container" class="my-4"></div>
+            </div>
+            
+            <!-- Password Authentication -->
+            <div id="password-auth" class="auth-pane">
+                <p class="text-sm text-gray-600 mb-4">Password tab content</p>
+                <div class="w-full bg-purple-600 text-white font-bold py-3 px-4 rounded text-center">
+                    <i class="fas fa-lock mr-2"></i>Password Tab Working
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center text-sm">
+            <p class="text-gray-500">
+                <span id="tab-status">No tab selected</span>
+            </p>
+            <div class="mt-4">
+                <a href="/login" class="text-blue-600 hover:underline">Go to Login</a> | 
+                <a href="/register" class="text-blue-600 hover:underline">Go to Register</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error handling scripts -->
+    <script src="/static/js/error-handler.js"></script>
+    <!-- Auth helper script -->
+    <script src="/static/js/auth-helper.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Auth test page loaded');
+            const tabStatus = document.getElementById('tab-status');
+            
+            // Update status when tabs are clicked
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.id.replace('-tab', '');
+                    tabStatus.textContent = `Active tab: ${tabName}`;
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

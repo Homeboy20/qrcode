@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Analytics - Barcode Service</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Chart.js for analytics charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="flex flex-col h-screen bg-gray-100">
+    <!-- Header -->
+    <header class="bg-white shadow-sm z-10">
+        <div class="flex justify-between items-center px-4 py-3">
+            <!-- Logo and mobile menu button -->
+            <div class="flex items-center">
+                <button id="sidebar-toggle" class="mr-2 md:hidden">
+                    <i class="fas fa-bars text-gray-500"></i>
+                </button>
+                <div class="text-xl font-bold text-primary-600 flex items-center">
+                    <i class="fas fa-barcode mr-2"></i>
+                    Barcode Service
+                </div>
+            </div>
+            
+            <!-- User profile dropdown -->
+            <div class="relative group">
+                <button class="flex items-center text-gray-700 focus:outline-none">
+                    <span class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 mr-2">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    <span class="hidden md:inline-block font-medium">Admin</span>
+                    <i class="fas fa-chevron-down text-sm"></i>
+                </button>
+                <!-- Profile dropdown -->
+                <div class="absolute right-0 mt-1 w-48 bg-white shadow-md border rounded-lg py-2 hidden group-hover:block z-10">
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Profile</a>
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Settings</a>
+                    <hr class="my-1">
+                    <a href="/logout" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main container -->
+    <div class="flex flex-1">
+        <!-- Sidebar (included from the template) -->
+        {% include "includes/sidebar.html" %}
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 overflow-hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Payment Analytics</h2>
+            
+            <!-- Overview Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white p-6 rounded-lg shadow-sm flex items-center">
+                    <div class="rounded-full bg-blue-100 p-3 mr-4">
+                        <i class="fas fa-dollar-sign text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Total Revenue</p>
+                        <p class="text-2xl font-bold text-gray-800">${{ total_revenue|default('0.00') }}</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-sm flex items-center">
+                    <div class="rounded-full bg-green-100 p-3 mr-4">
+                        <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Subscription Revenue</p>
+                        <p class="text-2xl font-bold text-gray-800">${{ subscription_revenue|default('0.00') }}</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-sm flex items-center">
+                    <div class="rounded-full bg-purple-100 p-3 mr-4">
+                        <i class="fas fa-hand-holding-heart text-purple-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Donation Revenue</p>
+                        <p class="text-2xl font-bold text-gray-800">${{ donation_revenue|default('0.00') }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Revenue by Month Chart -->
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Revenue by Month</h3>
+                    <div class="h-64">
+                        <canvas id="revenueByMonthChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Payment Methods Chart -->
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Payment Methods</h3>
+                    <div class="h-64">
+                        <canvas id="paymentMethodsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Transactions -->
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <h3 class="text-lg font-medium text-gray-800 mb-4">Recent Transactions</h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-6 text-left">Date</th>
+                                <th class="py-3 px-6 text-left">User</th>
+                                <th class="py-3 px-6 text-left">Amount</th>
+                                <th class="py-3 px-6 text-left">Method</th>
+                                <th class="py-3 px-6 text-left">Status</th>
+                                <th class="py-3 px-6 text-left">Type</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-600 text-sm">
+                            {% for payment in payments|default([]) %}
+                            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <td class="py-3 px-6 text-left">{{ payment.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td class="py-3 px-6 text-left">{{ payment.user.email }}</td>
+                                <td class="py-3 px-6 text-left">{{ payment.currency }} {{ payment.amount }}</td>
+                                <td class="py-3 px-6 text-left">{{ payment.payment_method }}</td>
+                                <td class="py-3 px-6 text-left">
+                                    {% if payment.status == 'completed' %}
+                                    <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                        Completed
+                                    </span>
+                                    {% elif payment.status == 'pending' %}
+                                    <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                        Pending
+                                    </span>
+                                    {% else %}
+                                    <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                        Failed
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-6 text-left">
+                                    {% if payment.is_donation %}
+                                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                        Donation
+                                    </span>
+                                    {% else %}
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                        Subscription
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="py-4 text-center text-gray-500">No payment records found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white px-4 py-3 shadow-inner text-center text-sm text-gray-500">
+        &copy; 2025 Barcode Service Admin Panel
+    </footer>
+    
+    <!-- Initialize charts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sample data for charts - replace with actual data from the backend
+            
+            // Revenue by Month
+            const monthCtx = document.getElementById('revenueByMonthChart').getContext('2d');
+            new Chart(monthCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [
+                        {
+                            label: 'Subscriptions',
+                            data: [500, 800, 600, 900, 1200, 1500],
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Donations',
+                            data: [200, 300, 250, 450, 600, 800],
+                            borderColor: 'rgb(147, 51, 234)',
+                            backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Payment Methods
+            const methodsCtx = document.getElementById('paymentMethodsChart').getContext('2d');
+            new Chart(methodsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [{% for method in payment_methods|default(['Credit Card', 'PayPal', 'Bank Transfer']) %}'{{ method }}',{% endfor %}],
+                    datasets: [{
+                        data: [60, 30, 10],
+                        backgroundColor: [
+                            'rgb(59, 130, 246)',
+                            'rgb(99, 102, 241)',
+                            'rgb(147, 51, 234)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        });
+    </script>
+    
+    <script src="/static/js/error-handler.js"></script>
+</body>
+</html> 

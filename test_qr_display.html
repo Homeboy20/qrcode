@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Display Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .qr-container {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        img {
+            max-width: 300px;
+            border: 1px solid #ccc;
+        }
+        .method {
+            background-color: #f5f5f5;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>QR Code Display Test</h1>
+    
+    <div class="method">
+        <h2>Method 1: Direct Image Tag</h2>
+        <div class="qr-container">
+            <h3>Local Downloaded Image</h3>
+            <img src="direct_qr_download.png" alt="Downloaded QR Code">
+            <p>This uses the file that was downloaded earlier.</p>
+        </div>
+    </div>
+    
+    <div class="method">
+        <h2>Method 2: Direct API Link</h2>
+        <div class="qr-container">
+            <h3>Direct API Link</h3>
+            <img src="http://127.0.0.1:5000/barcode/51" alt="QR Code from API">
+            <p>This connects directly to the API endpoint.</p>
+        </div>
+    </div>
+    
+    <div class="method">
+        <h2>Method 3: Embedded Base64 Image</h2>
+        <div class="qr-container">
+            <h3>Testing with a Known Working QR Code (Base64)</h3>
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAOOSURBVO3BQY4cSRLAQDLQ//8yV0c/JZCoak1o72Zmf7DGYWWNK2tcWePKGlfWuLLGlTWurHFljStrXFnjyhpX1riyxpU1rqxxZY0ra1xZ48oaV9b48iElf0nFEyVTxROlqZhKpooTJX9JxTfWuLLGlTWurPHlw1Q8oeSJihMlJxUnFScqnqg4UTIVJxVPlDyh5JPWuLLGlTWurPHllyh5Q8UTFVPJVDGVnCiZKqaKJypOlLyh4ldZ48oaV9a4ssaXX6biX6LkRMWJkhMVT1RMJf8SNa6scWWNK2t8+WFKTipmFSdKpoonKp5QcqLkRMkTSk5U/MvWuLLGlTWurPHll6n4S0qmiqnkhIqpYlJyQsUTKv6mNa6scWWNK2t8+TAVf5OKqWJS8kTFiYpJyVQxVUwVJyr+T2tcWePKGlfW+PJhSv5LKqaKSclUcaJkqjhRMlVMFU9U/B+tcWWNK2tcWePLh6k4UTJVPKHkRMWk5ERFKTlRcaLkiYqpYlIyVXxijStrXFnjyhpffpiSqWKqmCpOlEwVU8Wk5A0VU8Wk5ETFVDFVTEpOKqaKb6xxZY0ra1xZ48uHVUwVk5JJyVQxKflEFZOSqWJSMlWcKJkqpoqp4kTJVPGNNa6scWWNK2vY3/yAkk9UMVWcKJkqJiXfqDih5ImKSckna1xZ48oaV9b48mEqTpRMFVPFiZITFZOSqWJS8kTFEyqeqJgqJiVTxVQxKfnGGlfWuLLGlTW+/DAlU8UTFZOSNyqeUDJVnCiZKk5UTBVTxVQxKZkqpopvrHFljStrXFnjy4epmCqmiknJVDFVnCiZKk5UTEqeqHii4gmNP1jjyhpX1riyxpdfouQNFVPFiZKp4kTJVDFVnCj5hMYfrHFljStrXFnjyy9T8UTFiZJPVvGEkhMVT1R8Yo0ra1xZ48oa9jf/ICVTxaRkqjhRMlVMSqaKb1RMSqaKScknrXFljStrXFnjy4cp+UsqnlAyVZxUTEpOKk6UPFHxRMVUMSmZKr6xxpU1rqxxZY0vH6biESVPVEwVJxWTkknJVDEpeaJiqniiYlIyVXzSGlfWuLLGlTW+/DIlb6iYKiYlU8WkZKp4QslJxYmSqeJEyRMVv8oaV9a4ssaVNb78MhX/EiWTkqniRMkTFVPFpOQJJVPFVHGi5C+tcWWNK2tcWePLD1PyN1WcKHmimJRMFZOSJypeUzJVfGONK2tcWePKGlfWuLLGlTWurHFljStrXFnjyhpX1riyxpU1rqxxZY0ra1xZ48oaV9b4D+aQRGqxFMvUAAAAAElFTkSuQmCC" alt="Base64 QR Code">
+            <p>This is a base64-encoded QR code as a test comparison.</p>
+        </div>
+    </div>
+    
+    <script>
+        // Optional: Add some JavaScript to check if images loaded successfully
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                img.addEventListener('load', function() {
+                    console.log(`Image loaded successfully: ${img.src}`);
+                });
+                img.addEventListener('error', function() {
+                    console.error(`Failed to load image: ${img.src}`);
+                    img.style.border = '2px solid red';
+                    img.style.padding = '10px';
+                    img.style.display = 'block';
+                    const errorMsg = document.createElement('p');
+                    errorMsg.style.color = 'red';
+                    errorMsg.textContent = 'Error loading image';
+                    img.parentNode.insertBefore(errorMsg, img.nextSibling);
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <title>Welcome to Advanced Barcode Generator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="min-h-screen flex flex-col transition-colors duration-300" style="background-color: white;">
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-primary-600 to-secondary-600 text-white py-8 px-4 shadow-lg mb-8">
+    <div class="container mx-auto text-center">
+      <h1 class="text-4xl font-bold">Welcome to Advanced Barcode Generator</h1>
+      <p class="mt-2 text-lg">Your one-stop solution for generating barcodes and QR codes</p>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 flex-1 flex flex-col items-center justify-center">
+    <div class="space-y-6 text-center">
+      {% if logged_in %}
+        <p class="text-lg text-gray-700 dark:text-gray-300">You are logged in as {{ 'Admin' if is_admin else 'User' }}.</p>
+        <a href="/logout" class="inline-block bg-red-600 text-white py-3 px-6 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors shadow-md">
+          <i class="fas fa-sign-out-alt mr-2"></i>Logout
+        </a>
+      {% else %}
+        <a href="/login" class="inline-block bg-primary-600 text-white py-3 px-6 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors shadow-md">
+          <i class="fas fa-sign-in-alt mr-2"></i>Login
+        </a>
+        <a href="/register" class="inline-block bg-gray-600 text-white py-3 px-6 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors shadow-md">
+          <i class="fas fa-user-plus mr-2"></i>Register
+        </a>
+      {% endif %}
+      <a href="/explore" class="inline-block bg-gray-600 text-white py-3 px-6 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors shadow-md">
+        <i class="fas fa-compass mr-2"></i>Explore
+      </a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-auto text-center text-gray-500 dark:text-gray-400 pb-6">
+    <p>© 2025 Advanced Barcode Generator | Made with <i class="fas fa-heart text-red-500"></i></p>
+  </footer>
+
+  <script src="/static/js/error-handler.js"></script>
+</body>
+</html> 

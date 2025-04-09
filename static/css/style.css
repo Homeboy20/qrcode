@@ -1,0 +1,546 @@
+/* Existing CSS... */
+
+/* Sequence Generator Styles */
+.sequence-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.sequence-header {
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sequence-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.sequence-status {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+}
+
+.sequence-columns {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .sequence-columns {
+        flex-direction: row;
+    }
+    
+    .sequence-form-column {
+        flex: 1;
+        max-width: 40%;
+    }
+    
+    .sequence-results-column {
+        flex: 1.5;
+    }
+}
+
+.sequence-form {
+    background-color: #f9fafb;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sequence-form-group {
+    margin-bottom: 1rem;
+}
+
+.sequence-form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.sequence-form-input,
+.sequence-form-select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    background-color: #fff;
+}
+
+.sequence-form-input:focus,
+.sequence-form-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.sequence-form-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 1.25rem;
+    background-color: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.sequence-form-button:hover {
+    background-color: #2563eb;
+}
+
+.sequence-form-button i {
+    margin-right: 0.5rem;
+}
+
+.sequence-loading {
+    padding: 2rem;
+    text-align: center;
+    font-size: 1rem;
+    color: #6b7280;
+}
+
+.sequence-loading i {
+    margin-right: 0.5rem;
+    font-size: 1.25rem;
+    color: #3b82f6;
+}
+
+#sequence-list,
+.sequence-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.sequence-barcode-container {
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.sequence-barcode-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.sequence-barcode-data {
+    font-weight: 500;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+    text-align: center;
+    color: #1f2937;
+}
+
+.sequence-barcode-img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 0.75rem;
+}
+
+.sequence-download-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    text-decoration: none;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.sequence-download-link:hover {
+    background-color: #e5e7eb;
+    color: #1f2937;
+}
+
+.warning-item {
+    grid-column: 1 / -1;
+    margin-top: 1rem;
+}
+
+.export-options {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: #f9fafb;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.export-title {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    color: #374151;
+}
+
+.export-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.export-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.export-button:hover {
+    background-color: #e5e7eb;
+    color: #1f2937;
+}
+
+.export-button i {
+    margin-right: 0.5rem;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Sequence Generator Styles */
+#bulk-sequence-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border: none !important;
+  box-shadow: 0 4px 6px rgba(22, 163, 74, 0.2);
+  color: white !important;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+#bulk-sequence-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(22, 163, 74, 0.25);
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+#bulk-sequence-btn:active,
+#bulk-sequence-btn.active-btn {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
+}
+
+/* Animation for bulk generation */
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3), 0 0 0 0 rgba(22, 163, 74, 0.7);
+  }
+  70% {
+    box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3), 0 0 0 10px rgba(22, 163, 74, 0);
+  }
+  100% {
+    box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3), 0 0 0 0 rgba(22, 163, 74, 0);
+  }
+}
+
+#bulk-sequence-btn:not(:disabled) {
+  animation: pulse-border 2s infinite;
+}
+
+/* Sequence Results Grid */
+.sequence-results-container {
+  scroll-behavior: smooth;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+#sequence-results .grid {
+  scroll-margin-top: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  #sequence-results .grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+#sequence-results img {
+  transition: all 0.3s ease;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#sequence-results img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Card styling */
+#sequence-results .grid > div {
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+#sequence-results .grid > div:hover {
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+}
+
+/* Download button animation */
+#sequence-results .mt-4.bg-primary-600 {
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+}
+
+#sequence-results .mt-4.bg-primary-600:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.25);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+#sequence-results .mt-4.bg-primary-600:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Summary box styling */
+#sequence-results .mt-6.p-4.bg-gray-50 {
+  border-radius: 0.75rem;
+  border-left: 4px solid #3b82f6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Improved dark mode */
+.dark #sequence-results img {
+  filter: brightness(0.95) contrast(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark #sequence-results .grid > div {
+  background-color: #1f2937 !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.dark #sequence-results .grid > div:hover {
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+}
+
+.dark #sequence-results .mt-6.p-4.bg-gray-50 {
+  background-color: #1f2937 !important;
+  border-left: 4px solid #3b82f6;
+}
+
+/* Modern form styling */
+#sequence-form {
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+#sequence-form:focus-within {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+#sequence-form input,
+#sequence-form select {
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+}
+
+#sequence-form input:focus,
+#sequence-form select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+#generate-sequence-btn {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  transition: all 0.3s ease;
+}
+
+#generate-sequence-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+#generate-sequence-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Loading animation */
+.animate-spin {
+  border-width: 3px;
+  border-color: #3b82f6 transparent #3b82f6 transparent;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .sequence-form-column,
+  .sequence-results-column {
+    width: 100%;
+  }
+  
+  #sequence-results .grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+  
+  #sequence-results .mt-6.p-4.bg-gray-50 {
+    padding: 0.75rem;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+  #sequence-results .grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.5rem;
+  }
+  
+  #sequence-results .grid > div {
+    padding: 0.5rem;
+  }
+  
+  #sequence-results .mt-4.bg-primary-600 {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* Header and logo fixes for light theme */
+html:not(.dark) header {
+  background: #0f172a; /* Dark blue/slate background */
+  background-image: linear-gradient(135deg, #0f172a, #1e293b);
+  border-bottom: 1px solid #1e293b;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+html:not(.dark) header i.fas.fa-barcode {
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.5); /* Blue glow */
+  filter: drop-shadow(0 0 3px rgba(59, 130, 246, 0.5)); /* Blue glow */
+  animation: pulse-icon 2s infinite ease-in-out;
+  display: inline-block;
+}
+
+html:not(.dark) header h1 {
+  color: #ffffff !important; /* Pure white for maximum contrast */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Stronger shadow for depth */
+  font-weight: 700 !important; /* Extra bold */
+  letter-spacing: 0.5px; /* Slight letter spacing for clarity */
+}
+
+html:not(.dark) header nav a {
+  color: #ffffff !important; /* Bright white for nav links */
+  background-color: rgba(59, 130, 246, 0.2); /* Semi-transparent blue background */
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  display: inline-flex !important;
+  align-items: center;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+html:not(.dark) header nav a:hover {
+  color: #ffffff !important; /* Keep white on hover */
+  background-color: rgba(59, 130, 246, 0.4); /* More vibrant blue on hover */
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Add animation pulse to barcode icon */
+@keyframes pulse-icon {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* QR code button style enhancements */
+#generate-qr-btn {
+  transform: translateY(0);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+}
+
+#generate-qr-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.25);
+}
+
+#generate-qr-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Ensure modals and forms work in both themes */
+.modal, .form-container {
+  background-color: var(--modal-bg, #ffffff);
+  color: var(--modal-text, #1f2937);
+  border: 1px solid var(--modal-border, #e5e7eb);
+}
+
+.dark .modal, .dark .form-container {
+  --modal-bg: #1f2937;
+  --modal-text: #f3f4f6;
+  --modal-border: #374151;
+}
+
+/* Make form controls consistent in both themes */
+input, select, textarea, button {
+  font-family: inherit;
+}
+
+/* Add a subtle visual indicator for the current theme */
+html:not(.dark) #theme-toggle {
+  border: 2px solid #f3f4f6;
+}
+
+.dark #theme-toggle {
+  border: 2px solid #1f2937;
+} 

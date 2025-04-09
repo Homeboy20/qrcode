@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <title>Bulk Sequence Generator - Advanced Barcode Generator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Axios for HTTP requests -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- FontAwesome icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Barcode Generation Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  
+  <!-- Theme styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/themes.css') }}">
+
+  <style>
+    /* Custom animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    /* Remove arrows from number inputs */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen dark:bg-gray-900 transition-colors duration-300">
+  <!-- Dark Mode Toggle -->
+  <div class="fixed top-4 right-4 z-50">
+    <button id="theme-toggle"
+      class="p-3 bg-white dark:bg-gray-800 rounded-full shadow-md hover:shadow-xl transition-all 
+            focus:outline-none focus:ring-2 focus:ring-primary-400">
+      <i class="fas fa-sun text-yellow-500 dark:hidden"></i>
+      <i class="fas fa-moon text-blue-300 hidden dark:block"></i>
+    </button>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-6 px-4 shadow-lg">
+    <div class="container mx-auto flex items-center justify-between">
+      <div class="flex items-center">
+        <i class="fas fa-barcode text-3xl mr-3"></i>
+        <h1 class="text-2xl md:text-3xl font-bold">Bulk Sequence Generator</h1>
+      </div>
+      <nav>
+        <a href="/" class="text-white hover:text-blue-200 transition-colors">
+          <i class="fas fa-home mr-1"></i> Home
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main container -->
+  <div class="container mx-auto px-4 py-8 max-w-6xl" id="bulk-sequence-container">
+    <div class="mb-6">
+      <p class="text-gray-600 dark:text-gray-400 mb-2">
+        Generate multiple sequences of barcodes in one operation. Add up to 10 different sequence configurations.
+      </p>
+      <p id="bulk-sequence-auth-status" class="text-sm text-blue-600 dark:text-blue-400">
+        {% if logged_in %}
+        Your generated codes will be saved to your account
+        {% else %}
+        Sign in to save your generated codes to your account
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- Bulk Sequence Form -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-8">
+      <form id="bulk-sequences-form">
+        <div class="mb-4 flex justify-between items-center">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-white">Sequence Configurations</h2>
+          <button type="button" id="add-sequence-btn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition-colors">
+            <i class="fas fa-plus mr-1"></i> Add Sequence
+          </button>
+        </div>
+
+        <div id="sequences-list" class="space-y-4 mb-6">
+          <!-- Sequence items will be added here dynamically -->
+        </div>
+
+        <div class="flex justify-end">
+          <button type="submit" id="generate-all-btn" class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-md transition-colors shadow-md">
+            <i class="fas fa-play mr-2"></i> Generate All Sequences
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Results Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+      <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Results</h2>
+      <div id="bulk-sequence-results" class="min-h-[300px]">
+        <p class="text-gray-500 dark:text-gray-400 text-center py-16">
+          No barcodes have been generated yet. Configure your sequences above and click 'Generate All Sequences'.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-8 mt-12">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p>&copy; {{ current_year|default('2023') }} Advanced Barcode Generator. All rights reserved.</p>
+        </div>
+        <div class="flex space-x-4">
+          <a href="/" class="text-gray-300 hover:text-white transition-colors">Home</a>
+          <a href="#" class="text-gray-300 hover:text-white transition-colors">Privacy Policy</a>
+          <a href="#" class="text-gray-300 hover:text-white transition-colors">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Error handler script -->
+  <script src="{{ url_for('static', filename='js/error-handler.js') }}"></script>
+  
+  <!-- Theme switcher script -->
+  <script src="{{ url_for('static', filename='js/theme-switcher.js') }}"></script>
+  
+  <!-- Bulk Sequence Generator Script -->
+  <script src="{{ url_for('static', filename='js/bulk-sequence-generator.js') }}"></script>
+</body>
+</html> 

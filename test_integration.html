@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode & QR Code Generator Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .code-display {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .input-group {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+        .error {
+            color: #ff0000;
+            padding: 10px;
+            background-color: #ffeeee;
+            border-radius: 4px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+        }
+        .download-link, .direct-download-btn {
+            margin-top: 10px;
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+        .download-link:hover {
+            background-color: #0056b3;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            margin-right: 5px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+        .tab.active {
+            background-color: white;
+            border-bottom-color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Barcode & QR Code Generator Test</h1>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="qr-code">QR Code</div>
+        <div class="tab" data-tab="barcode">Barcode</div>
+        <div class="tab" data-tab="help">Help</div>
+    </div>
+    
+    <div class="tab-content active" id="qr-code-content">
+        <div class="section">
+            <h2>Generate QR Code</h2>
+            <p>Enter data to encode in the QR code:</p>
+            
+            <div class="container">
+                <div style="flex: 1; min-width: 300px;">
+                    <div class="input-group">
+                        <label for="qr-data">Data for QR Code:</label>
+                        <input type="text" id="qr-data" value="https://example.com/test">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>
+                            <input type="checkbox" id="qr-dynamic"> Dynamic QR Code (with redirect)
+                        </label>
+                    </div>
+                    
+                    <div class="input-group" id="qr-redirect-group" style="display: none;">
+                        <label for="qr-redirect">Redirect URL:</label>
+                        <input type="text" id="qr-redirect" value="https://example.com/landing">
+                    </div>
+                    
+                    <button id="generate-qr">Generate QR Code</button>
+                </div>
+                
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>QR Code Output:</h3>
+                    <div id="qr-output" class="code-display">
+                        <p>QR code will appear here after generation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="barcode-content">
+        <div class="section">
+            <h2>Generate Barcode</h2>
+            <p>Enter data and select barcode type:</p>
+            
+            <div class="container">
+                <div style="flex: 1; min-width: 300px;">
+                    <div class="input-group">
+                        <label for="barcode-data">Barcode Data:</label>
+                        <input type="text" id="barcode-data" value="123456789012">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="barcode-type">Barcode Type:</label>
+                        <select id="barcode-type">
+                            <option value="code128">Code 128</option>
+                            <option value="code39">Code 39</option>
+                            <option value="ean13">EAN-13</option>
+                            <option value="ean8">EAN-8</option>
+                            <option value="upca" selected>UPC-A</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>
+                            <input type="checkbox" id="barcode-dynamic"> Dynamic Barcode (with redirect)
+                        </label>
+                    </div>
+                    
+                    <div class="input-group" id="barcode-redirect-group" style="display: none;">
+                        <label for="barcode-redirect">Redirect URL:</label>
+                        <input type="text" id="barcode-redirect" value="https://example.com/barcode-landing">
+                    </div>
+                    
+                    <button id="generate-barcode">Generate Barcode</button>
+                </div>
+                
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>Barcode Output:</h3>
+                    <div id="barcode-output" class="code-display">
+                        <p>Barcode will appear here after generation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="help-content">
+        <div class="section">
+            <h2>Help & Troubleshooting</h2>
+            
+            <h3>QR Codes</h3>
+            <ul>
+                <li>QR codes can contain any text or URL data</li>
+                <li>Dynamic QR codes allow you to set a redirect URL that opens when the QR code is scanned</li>
+                <li>If the image isn't displaying properly, try using the direct download option</li>
+            </ul>
+            
+            <h3>Barcodes</h3>
+            <ul>
+                <li>Different barcode types have different requirements:
+                    <ul>
+                        <li><strong>UPC-A:</strong> Exactly 11 or 12 numeric digits</li>
+                        <li><strong>EAN-13:</strong> Exactly 12 or 13 numeric digits</li>
+                        <li><strong>EAN-8:</strong> Exactly 7 or 8 numeric digits</li>
+                        <li><strong>Code 39:</strong> Uppercase letters, numbers, and some special characters</li>
+                        <li><strong>Code 128:</strong> Most versatile, supports all ASCII characters</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h3>Troubleshooting</h3>
+            <ul>
+                <li>If images don't display or download properly, check the following:
+                    <ul>
+                        <li>Make sure the Flask server is running</li>
+                        <li>Check the browser console for any errors</li>
+                        <li>Try using the direct link option</li>
+                        <li>Make sure the data is valid for the selected barcode type</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Include our integration helper script -->
+    <script src="qr_integration.js"></script>
+    
+    <!-- App-specific code -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching functionality
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs and contents
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    tab.classList.add('active');
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-content`).classList.add('active');
+                });
+            });
+            
+            // QR code dynamic checkbox handling
+            const qrDynamicCheckbox = document.getElementById('qr-dynamic');
+            const qrRedirectGroup = document.getElementById('qr-redirect-group');
+            
+            qrDynamicCheckbox.addEventListener('change', function() {
+                qrRedirectGroup.style.display = this.checked ? 'block' : 'none';
+            });
+            
+            // Barcode dynamic checkbox handling
+            const barcodeDynamicCheckbox = document.getElementById('barcode-dynamic');
+            const barcodeRedirectGroup = document.getElementById('barcode-redirect-group');
+            
+            barcodeDynamicCheckbox.addEventListener('change', function() {
+                barcodeRedirectGroup.style.display = this.checked ? 'block' : 'none';
+            });
+            
+            // QR code generation button
+            document.getElementById('generate-qr').addEventListener('click', function() {
+                const data = document.getElementById('qr-data').value;
+                const isDynamic = document.getElementById('qr-dynamic').checked;
+                const redirectUrl = document.getElementById('qr-redirect').value;
+                
+                generateAndDisplayQR(data, 'qr-output', isDynamic, redirectUrl);
+            });
+            
+            // Barcode generation button
+            document.getElementById('generate-barcode').addEventListener('click', function() {
+                const data = document.getElementById('barcode-data').value;
+                const barcodeType = document.getElementById('barcode-type').value;
+                const isDynamic = document.getElementById('barcode-dynamic').checked;
+                const redirectUrl = document.getElementById('barcode-redirect').value;
+                
+                generateAndDisplayBarcode(data, barcodeType, 'barcode-output', isDynamic, redirectUrl);
+            });
+        });
+    </script>
+</body>
+</html> 

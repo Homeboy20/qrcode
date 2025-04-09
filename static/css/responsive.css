@@ -1,0 +1,299 @@
+/**
+ * Responsive Design Improvements for Barcode Generator
+ * Provides better mobile and tablet experiences
+ */
+
+/* Base responsive settings */
+:root {
+    --container-padding: 1rem;
+    --card-padding: 1.5rem;
+    --card-padding-mobile: 1rem;
+    --tab-height: 3.5rem;
+    --tab-height-mobile: 3rem;
+}
+
+/* Mobile first approach */
+
+/* General Responsive Layout */
+@media (max-width: 640px) {
+    .container {
+        padding-left: var(--container-padding);
+        padding-right: var(--container-padding);
+    }
+    
+    .bg-white {
+        border-radius: 0.5rem;
+    }
+    
+    /* Header adjustments */
+    header h1 {
+        font-size: 1.5rem;
+    }
+    
+    /* Make form inputs larger for touch */
+    input, select, textarea, button {
+        min-height: 3rem;
+        font-size: 1rem;
+    }
+}
+
+/* Responsive tabs for mobile */
+@media (max-width: 768px) {
+    /* Better tab display on mobile */
+    #tabs {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+    }
+    
+    #tabs::-webkit-scrollbar {
+        display: none; /* Chrome/Safari/Opera */
+    }
+    
+    #tabs li {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+    }
+    
+    #tabs a {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        white-space: nowrap;
+    }
+    
+    #tabs a i {
+        margin-right: 0.25rem;
+    }
+    
+    /* Collapsible panels for mobile */
+    .mobile-collapsible {
+        position: relative;
+    }
+    
+    .mobile-collapsible .collapsible-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background-color: #f9fafb;
+        border-radius: 0.375rem;
+        cursor: pointer;
+    }
+    
+    .mobile-collapsible .collapsible-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-in-out;
+    }
+    
+    .mobile-collapsible.expanded .collapsible-content {
+        max-height: 2000px; /* Arbitrary large value */
+    }
+    
+    .mobile-collapsible .toggle-icon {
+        transition: transform 0.3s ease;
+    }
+    
+    .mobile-collapsible.expanded .toggle-icon {
+        transform: rotate(180deg);
+    }
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 768px) {
+    /* Convert grid layouts to single column */
+    .grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Sequence list items become full width */
+    #sequence-list,
+    .sequence-list {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Adjust history items to take full width */
+    .history-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .history-item-image {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .history-item-details {
+        width: 100%;
+    }
+}
+
+/* Touch optimizations */
+@media (max-width: 1024px) {
+    /* Larger touch targets */
+    .btn, button, .link, a {
+        padding: 0.75rem 1rem;
+    }
+    
+    /* More spacing between form elements */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Larger checkboxes and radio buttons */
+    input[type="checkbox"], input[type="radio"] {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+    
+    /* Improve select dropdowns */
+    select {
+        background-position: right 0.75rem center;
+        background-size: 0.75rem;
+    }
+}
+
+/* Specific component improvements */
+/* Barcode results improved display */
+.result-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+@media (min-width: 768px) {
+    .result-area {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+    
+    .result-image {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    
+    .result-details {
+        flex: 1;
+        padding-left: 1.5rem;
+    }
+}
+
+/* Float action buttons for mobile */
+@media (max-width: 768px) {
+    .floating-action-button {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 50%;
+        background-color: #3b82f6;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 50;
+    }
+}
+
+/* Bottom navigation for mobile */
+@media (max-width: 640px) {
+    .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: white;
+        border-top: 1px solid #e5e7eb;
+        height: 4rem;
+        justify-content: space-around;
+        align-items: center;
+        z-index: 40;
+    }
+    
+    .bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        height: 100%;
+        color: #6b7280;
+    }
+    
+    .bottom-nav-item.active {
+        color: #3b82f6;
+    }
+    
+    .bottom-nav-item i {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .bottom-nav-item span {
+        font-size: 0.75rem;
+    }
+    
+    /* Add padding to the main content to prevent overlap */
+    body.has-bottom-nav .container {
+        padding-bottom: 5rem;
+    }
+}
+
+/* Improve form layouts on different screen sizes */
+@media (min-width: 768px) {
+    .form-row {
+        display: flex;
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+    }
+    
+    .form-col {
+        flex: 1;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+
+/* Responsive cards that look good on all devices */
+.responsive-card {
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (max-width: 640px) {
+    .responsive-card {
+        border-radius: 0.375rem;
+        margin-left: -1rem;
+        margin-right: -1rem;
+    }
+}
+
+.responsive-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Accessible improvements for touch devices */
+@media (hover: none) {
+    /* Disable hover effects on touch devices */
+    .responsive-card:hover {
+        transform: none;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Ensure buttons have enough space */
+    button, .btn {
+        margin-bottom: 0.5rem;
+    }
+} 

@@ -1,0 +1,297 @@
+/* Sequence Generator Styles */
+
+/* Main container */
+#sequence-generator-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+/* Header section */
+.sequence-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.sequence-header h2 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 24px;
+}
+
+.auth-status {
+    font-size: 14px;
+    color: #666;
+    margin: 5px 0;
+}
+
+/* Content layout - two columns */
+.sequence-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.sequence-form-column {
+    flex: 1;
+    min-width: 300px;
+}
+
+.sequence-results-column {
+    flex: 2;
+    min-width: 450px;
+}
+
+/* Form container */
+.sequence-form-container {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 20px;
+}
+
+.sequence-form-container h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+    color: #333;
+}
+
+/* Form styles */
+.settings-form .form-group {
+    margin-bottom: 15px;
+}
+
+.settings-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.settings-form input,
+.settings-form select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.settings-form input:focus,
+.settings-form select:focus {
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.form-actions {
+    margin-top: 20px;
+}
+
+/* Button styles */
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn-primary {
+    background-color: #4a90e2;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #3a80d2;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+/* Results container */
+.sequence-results-container {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 20px;
+    min-height: 400px;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.results-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.export-options {
+    display: flex;
+    gap: 10px;
+}
+
+/* Barcode grid (two columns) */
+.barcode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.barcode-item {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 10px;
+    background-color: #fafafa;
+    transition: transform 0.2s;
+}
+
+.barcode-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.barcode-data {
+    font-weight: bold;
+    margin-bottom: 8px;
+    word-break: break-all;
+    font-size: 14px;
+}
+
+.barcode-image {
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.barcode-image img {
+    max-width: 100%;
+    height: auto;
+}
+
+.barcode-actions {
+    text-align: center;
+}
+
+.download-link {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #4a90e2;
+    color: white;
+    text-decoration: none;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.download-link:hover {
+    background-color: #3a80d2;
+}
+
+/* Status and notification messages */
+.no-results, .loading {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+
+.error-message {
+    padding: 10px;
+    background-color: #ffebee;
+    border: 1px solid #ffcdd2;
+    border-radius: 4px;
+    color: #d32f2f;
+    margin-bottom: 10px;
+}
+
+.saved-notice {
+    padding: 10px;
+    background-color: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    border-radius: 4px;
+    color: #2e7d32;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.saved-warning {
+    padding: 10px;
+    background-color: #fff8e1;
+    border: 1px solid #ffecb3;
+    border-radius: 4px;
+    color: #ff8f00;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.export-status {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    min-height: 20px;
+}
+
+.export-status.success {
+    background-color: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    color: #2e7d32;
+}
+
+.export-status.error {
+    background-color: #ffebee;
+    border: 1px solid #ffcdd2;
+    color: #d32f2f;
+}
+
+.export-status.loading {
+    background-color: #e3f2fd;
+    border: 1px solid #bbdefb;
+    color: #1976d2;
+}
+
+.export-status.info {
+    background-color: #e8eaf6;
+    border: 1px solid #c5cae9;
+    color: #3f51b5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sequence-content {
+        flex-direction: column;
+    }
+    
+    .sequence-form-column,
+    .sequence-results-column {
+        width: 100%;
+    }
+    
+    .barcode-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .export-options {
+        margin-top: 10px;
+    }
+} 

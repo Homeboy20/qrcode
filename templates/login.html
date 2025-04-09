@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Advanced Barcode Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+    
+    <!-- Add reCAPTCHA script for phone auth -->
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+    
+    <style>
+        /* Dark mode overrides */
+        .dark .dark\:bg-gray-900 {
+            background-color: #111827;
+        }
+        .dark .dark\:text-white {
+            color: #ffffff;
+        }
+        .dark .dark\:border-gray-700 {
+            border-color: #374151;
+        }
+        
+        /* Custom colors matching previous Tailwind config */
+        .text-primary-600 {
+            color: #2563eb;
+        }
+        .bg-primary-600 {
+            background-color: #2563eb;
+        }
+        .hover\:bg-primary-700:hover {
+            background-color: #1d4ed8;
+        }
+        .focus\:ring-primary-500:focus {
+            --tw-ring-color: rgba(59, 130, 246, 0.5);
+        }
+        
+        /* Auth methods tab styling */
+        .auth-tab.active {
+            border-bottom: 2px solid #2563eb;
+            color: #2563eb;
+        }
+        .auth-pane {
+            display: none;
+        }
+        .auth-pane.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen dark:bg-gray-900 transition-colors duration-300 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <!-- Dark Mode Toggle -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="theme-toggle"
+            class="p-3 bg-white dark:bg-gray-800 rounded-full shadow-md hover:shadow-xl transition-all 
+                focus:outline-none focus:ring-2 focus:ring-primary-400">
+            <i class="fas fa-sun text-yellow-500 dark:hidden"></i>
+            <i class="fas fa-moon text-blue-300 hidden dark:block"></i>
+        </button>
+    </div>
+
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-primary-600 dark:text-white flex items-center justify-center">
+                <i class="fas fa-barcode mr-3 text-primary-600"></i>
+                Advanced Barcode Generator
+            </h1>
+            <p class="mt-2 text-gray-600 dark:text-gray-400">Sign in to your account</p>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg px-8 pt-6 pb-8 mb-4 transition-all duration-300">
+            {% if error %}
+            <div class="mb-4 px-4 py-3 rounded-md text-center bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100">
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <!-- Auth Method Tabs -->
+            <div class="flex mb-6 border-b border-gray-200 dark:border-gray-700">
+                <button id="email-tab" class="auth-tab active py-2 px-4 font-medium text-sm focus:outline-none">
+                    <i class="fas fa-envelope mr-2"></i>Email
+                </button>
+                <button id="phone-tab" class="auth-tab py-2 px-4 font-medium text-sm focus:outline-none">
+                    <i class="fas fa-phone mr-2"></i>Phone
+                </button>
+                <button id="password-tab" class="auth-tab py-2 px-4 font-medium text-sm focus:outline-none">
+                    <i class="fas fa-lock mr-2"></i>Password
+                </button>
+            </div>
+            
+            <!-- Email Authentication -->
+            <div id="email-auth" class="auth-pane active">
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Sign in with your email address</p>
+                <div id="email-button" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 mb-4 text-center cursor-pointer">
+                    <i class="fas fa-envelope mr-2"></i>Continue with Email
+                </div>
+                <div id="email-verification-sent" class="hidden">
+                    <p class="text-green-600 dark:text-green-400 mb-4 text-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Verification email sent! Please check your inbox and follow the instructions.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Phone Authentication -->
+            <div id="phone-auth" class="auth-pane">
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Sign in with your phone number</p>
+                <div class="mb-4">
+                    <label for="phone-input" class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Phone Number</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="fas fa-phone text-gray-400"></i>
+                        </div>
+                        <input id="phone-input" type="tel" placeholder="+1 123 456 7890"
+                            class="shadow appearance-none border rounded w-full py-2 pl-10 pr-3 text-gray-700 dark:text-white dark:bg-gray-700 dark:border-gray-600 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    </div>
+                </div>
+                <button id="phone-button" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 mb-4">
+                    <i class="fas fa-sms mr-2"></i>Send Verification Code
+                </button>
+                
+                <div id="recaptcha-container" class="mb-4"></div>
+                
+                <div id="verification-code-container" class="mb-4 hidden">
+                    <label for="verification-code" class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Verification Code</label>
+                    <input id="verification-code" type="text" placeholder="Enter code"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-white dark:bg-gray-700 dark:border-gray-600 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <button id="verify-code-button" class="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <i class="fas fa-check-circle mr-2"></i>Verify Code
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Password Authentication -->
+            <div id="password-auth" class="auth-pane">
+            <form method="POST" action="/login" id="login-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                
+                <!-- Email -->
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Email Address</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input id="email" name="email" type="email" required
+                            class="shadow appearance-none border rounded w-full py-2 pl-10 pr-3 text-gray-700 dark:text-white dark:bg-gray-700 dark:border-gray-600 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            placeholder="your.email@example.com">
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="password" class="block text-gray-700 dark:text-gray-300 text-sm font-bold">Password</label>
+                        <a href="/reset-password" class="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400">Forgot Password?</a>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input id="password" name="password" type="password" required
+                            class="shadow appearance-none border rounded w-full py-2 pl-10 pr-10 text-gray-700 dark:text-white dark:bg-gray-700 dark:border-gray-600 leading-tight focus:outline-none focus:ring-2 focus:ring-primary-500">
+                        <button type="button" id="toggle-password" class="absolute right-2 top-2 text-gray-500">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Remember Me -->
+                <div class="mb-6 flex items-center">
+                    <input type="checkbox" id="remember" name="remember" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                    <label for="remember" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                        Remember me
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="mb-6">
+                    <button type="submit"
+                        class="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 w-full transition-colors">
+                        Sign In
+                    </button>
+                    </div>
+                </form>
+                </div>
+
+                <div class="text-center">
+                    <a class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400" href="/register">
+                        Don't have an account? Sign up
+                    </a>
+                </div>
+            
+            <!-- Form Status Indicator -->
+            <div id="form-status" class="mt-4 p-2 text-sm text-center hidden"></div>
+            
+            <!-- Hidden form for Firebase auth -->
+            <form id="firebase-auth-form" method="POST" action="/login" class="hidden">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="firebase_token" id="firebase-token">
+                <input type="hidden" name="auth_method" id="auth-method">
+            </form>
+        </div>
+        
+        <!-- Security Notice -->
+        <div class="text-center text-xs text-gray-500 dark:text-gray-400">
+            <p class="mb-2">
+                <i class="fas fa-shield-alt mr-1"></i>
+                Your connection is secure
+            </p>
+            <p>
+                We implement multi-factor authentication and rate limiting to protect your account
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Firebase
+        function initializeFirebase(config) {
+            try {
+                // Check if Firebase SDK is loaded
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK not loaded');
+                }
+                
+                // Check if already initialized
+                if (firebase.apps && firebase.apps.length > 0) {
+                    console.log("Firebase already initialized");
+            } else {
+                    // Initialize new Firebase app with API key verification
+                    firebase.initializeApp(config);
+                    console.log("Firebase initialized successfully");
+                }
+                
+                // Initialize analytics if available - temporarily disabled due to API key issues
+                /*
+                if (firebase.analytics) {
+                    try {
+                        firebase.analytics();
+                        console.log("Firebase analytics initialized");
+                    } catch (analyticsError) {
+                        console.warn("Firebase analytics initialization failed:", analyticsError);
+                    }
+                }
+                */
+            } catch (error) {
+                console.error("Firebase initialization error:", error);
+                // Show error in form status
+                const statusDiv = document.getElementById('form-status');
+                if (statusDiv) {
+                    statusDiv.className = 'mt-4 p-2 text-sm text-center rounded bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100';
+                    statusDiv.textContent = 'Firebase unavailable. Please use password authentication.';
+                    statusDiv.classList.remove('hidden');
+                }
+                // Switch to password tab
+                document.addEventListener('DOMContentLoaded', function() {
+                    const passwordTab = document.getElementById('password-tab');
+                    if (passwordTab) passwordTab.click();
+                });
+            }
+        }
+        
+        // Fetch Firebase config from server
+        fetch('/api/firebase-config')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch Firebase config');
+                }
+                return response.json();
+            })
+            .then(config => {
+                // Check if Firebase is available on the server
+                if (config.firebase_available === false) {
+                    console.warn('Server indicated Firebase is not available:', config.message);
+                    const passwordTab = document.getElementById('password-tab');
+                    if (passwordTab) passwordTab.click();
+                    
+                    // Disable Firebase tabs
+                    const emailTab = document.getElementById('email-tab');
+                    const phoneTab = document.getElementById('phone-tab');
+                    if (emailTab) emailTab.style.display = 'none';
+                    if (phoneTab) phoneTab.style.display = 'none';
+                    
+                    // Show status message
+                    const statusDiv = document.getElementById('form-status');
+                    if (statusDiv) {
+                        statusDiv.className = 'mt-4 p-2 text-sm text-center rounded bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100';
+                        statusDiv.textContent = 'Firebase authentication unavailable. Please use password authentication.';
+                        statusDiv.classList.remove('hidden');
+                    }
+                    return;
+                }
+                
+                // Validate the API key
+                if (!config.apiKey || config.apiKey.includes('AIzaSy') && config.apiKey.length < 30) {
+                    console.warn('Invalid API key detected in config. Using password authentication only.');
+                    const passwordTab = document.getElementById('password-tab');
+                    if (passwordTab) passwordTab.click();
+                    
+                    // Disable Firebase tabs
+                    const emailTab = document.getElementById('email-tab');
+                    const phoneTab = document.getElementById('phone-tab');
+                    if (emailTab) emailTab.style.display = 'none';
+                    if (phoneTab) phoneTab.style.display = 'none';
+                    
+                    // Show status message
+                    const statusDiv = document.getElementById('form-status');
+                    if (statusDiv) {
+                        statusDiv.className = 'mt-4 p-2 text-sm text-center rounded bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100';
+                        statusDiv.textContent = 'Firebase authentication unavailable. Please use password authentication.';
+                        statusDiv.classList.remove('hidden');
+                    }
+                    return;
+                }
+                
+                // Initialize Firebase with server-provided config
+                initializeFirebase(config);
+            })
+            .catch(error => {
+                console.error('Error fetching Firebase config:', error);
+                // Fallback to static config if server fetch fails
+                const firebaseConfig = {
+                    apiKey: "AIzaSyB33r7x9YnYLJQ9Fvw9xAYVQZ3gNB9xwxA",
+                    authDomain: "ndosa-barcode.firebaseapp.com",
+                    projectId: "ndosa-barcode",
+                    storageBucket: "ndosa-barcode.appspot.com", 
+                    messagingSenderId: "273581998467",
+                    appId: "1:273581998467:web:ee6e7ef02eb4c42a5e9f6b"
+                };
+                initializeFirebase(firebaseConfig);
+            });
+        
+        // DOM Elements for auth-helper.js
+        // These event listeners are now handled by auth-helper.js
+        
+        // Dark mode toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const htmlElement = document.documentElement;
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            // Check for saved theme preference or respect OS preference
+            if (localStorage.getItem('theme') === 'dark' || 
+                (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                htmlElement.classList.add('dark');
+            } else {
+                htmlElement.classList.remove('dark');
+            }
+            
+            // Theme toggle button click handler
+            themeToggle.addEventListener('click', function() {
+                if (htmlElement.classList.contains('dark')) {
+                    htmlElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    htmlElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+        });
+    </script>
+    
+    <!-- Error handling for external scripts -->
+    <script src="/static/js/error-handler.js"></script>
+    <!-- Auth helper script -->
+    <script src="/static/js/auth-helper.js"></script>
+</body>
+</html>

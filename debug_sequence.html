@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Sequence Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function testSequenceGeneration() {
+            // Make the same request as our test script
+            const testData = {
+                'prefix': 'TEST',
+                'start': 1,
+                'count': 5,
+                'pad_length': 3,
+                'barcode_type': 'code128',
+                'suffix': '-TEMP',
+                'save_to_system': false
+            };
+            
+            // Use fetch to make the request
+            fetch('http://127.0.0.1:5000/generate_sequence', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(testData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('API response:', data);
+                
+                // Debug the sequence data
+                if (data.sequence_data && data.sequence_data.length > 0) {
+                    console.log('First barcode:', data.sequence_data[0]);
+                    
+                    // Display the first barcode
+                    const img = document.createElement('img');
+                    img.src = data.sequence_data[0].image_data;
+                    document.getElementById('results').appendChild(img);
+                    
+                    // Display barcode data
+                    const p = document.createElement('p');
+                    p.textContent = `Barcode data: ${data.sequence_data[0].data}`;
+                    document.getElementById('results').appendChild(p);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+        function openSequenceTab() {
+            window.open('http://127.0.0.1:5000/#sequence-tab', '_blank');
+        }
+        
+        function runDebugFunction() {
+            // Open a new window/tab to the sequence tab page
+            const win = window.open('http://127.0.0.1:5000/#sequence-tab', '_blank');
+            
+            // Wait for the page to load then run debug function
+            setTimeout(() => {
+                win.postMessage({action: 'runDebugSequenceGenerator'}, '*');
+            }, 2000);
+            
+            // Add instructions to the current page
+            const instructions = document.createElement('div');
+            instructions.innerHTML = `
+                <p style="color: green;">Debug window opened. Please check the console in the new window.</p>
+                <p>If the debug function doesn't run automatically, please run this command in the console of the new window:</p>
+                <pre style="background: #eee; padding: 10px;">debugSequenceGenerator();</pre>
+            `;
+            document.getElementById('instructions').innerHTML = '';
+            document.getElementById('instructions').appendChild(instructions);
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #results, #instructions {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Sequence Generator</h1>
+    
+    <div class="button-container">
+        <button onclick="testSequenceGeneration()">Test API Only</button>
+        <button onclick="openSequenceTab()">Open Sequence Tab</button>
+        <button onclick="runDebugFunction()">Run Debug Function</button>
+    </div>
+    
+    <div id="instructions">
+        <p>Use the buttons above to debug the sequence generator functionality:</p>
+        <ul>
+            <li><strong>Test API Only</strong> - Makes a direct API call to generate barcodes without the UI</li>
+            <li><strong>Open Sequence Tab</strong> - Opens the sequence tab in the main application</li>
+            <li><strong>Run Debug Function</strong> - Opens the sequence tab and runs the debug function to diagnose issues</li>
+        </ul>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        // Listen for messages from the debug window
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.action === 'debugResults') {
+                // Display debug results received from the other window
+                const resultsDiv = document.getElementById('results');
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(event.data.results, null, 2);
+                resultsDiv.appendChild(pre);
+            }
+        });
+    </script>
+</body>
+</html> 

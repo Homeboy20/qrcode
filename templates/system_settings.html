@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Settings - Barcode Service</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="flex flex-col h-screen bg-gray-100">
+    <!-- Header -->
+    <header class="bg-white shadow-sm z-10">
+        <div class="flex justify-between items-center px-4 py-3">
+            <!-- Logo and mobile menu button -->
+            <div class="flex items-center">
+                <button id="sidebar-toggle" class="mr-2 md:hidden">
+                    <i class="fas fa-bars text-gray-500"></i>
+                </button>
+                <div class="text-xl font-bold text-primary-600 flex items-center">
+                    <i class="fas fa-barcode mr-2"></i>
+                    Barcode Service
+                </div>
+            </div>
+            
+            <!-- User profile dropdown -->
+            <div class="relative group">
+                <button class="flex items-center text-gray-700 focus:outline-none">
+                    <span class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 mr-2">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    <span class="hidden md:inline-block font-medium">Admin</span>
+                    <i class="fas fa-chevron-down text-sm"></i>
+                </button>
+                <!-- Profile dropdown -->
+                <div class="absolute right-0 mt-1 w-48 bg-white shadow-md border rounded-lg py-2 hidden group-hover:block z-10">
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Profile</a>
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Settings</a>
+                    <hr class="my-1">
+                    <a href="/logout" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main container -->
+    <div class="flex flex-1">
+        <!-- Sidebar (included from the template) -->
+        {% include "includes/sidebar.html" %}
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 overflow-hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">System Settings</h2>
+            
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">General Settings</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Site Name</label>
+                            <input type="text" value="Barcode Service" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                            <p class="text-sm text-gray-500 mt-1">The name of your application</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Admin Email</label>
+                            <input type="email" value="admin@example.com" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                            <p class="text-sm text-gray-500 mt-1">Email for system notifications</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Email Configuration</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">SMTP Server</label>
+                            <input type="text" value="smtp.example.com" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">SMTP Port</label>
+                            <input type="number" value="587" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">SMTP Username</label>
+                            <input type="text" value="user@example.com" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">SMTP Password</label>
+                            <input type="password" value="********" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">System Maintenance</h3>
+                    <div class="flex items-center mb-4">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Clear Cache</button>
+                        <button class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded ml-4">Backup Database</button>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Site Appearance</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Favicon</label>
+                            <input type="file" accept="image/*" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                            <p class="text-sm text-gray-500 mt-1">Upload a favicon (16x16 or 32x32 pixels)</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+                            <input type="file" accept="image/*" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                            <p class="text-sm text-gray-500 mt-1">Upload a logo (recommended size: 200x50 pixels)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">SEO Settings</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Meta Tags</label>
+                            <textarea class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600" rows="3"></textarea>
+                            <p class="text-sm text-gray-500 mt-1">Add meta tags for SEO</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Keywords</label>
+                            <input type="text" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                            <p class="text-sm text-gray-500 mt-1">Comma-separated keywords</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <textarea class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600" rows="3"></textarea>
+                            <p class="text-sm text-gray-500 mt-1">Site description for SEO</p>
+                        </div>
+                        <div>
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Generate Sitemap</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-gray-800 mb-4">Social Links</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Facebook</label>
+                            <input type="url" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Twitter</label>
+                            <input type="url" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">LinkedIn</label>
+                            <input type="url" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Instagram</label>
+                            <input type="url" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-600">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pt-4 border-t border-gray-200 flex justify-end">
+                    <button class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded mr-2">Reset</button>
+                    <button class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded">Save Changes</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white px-4 py-3 shadow-inner text-center text-sm text-gray-500">
+        &copy; 2025 Barcode Service Admin Panel
+    </footer>
+    
+    <script src="/static/js/error-handler.js"></script>
+</body>
+</html> 

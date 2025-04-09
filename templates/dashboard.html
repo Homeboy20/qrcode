@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles for primary colors */
+        .bg-primary-50 { background-color: #f0f9ff; }
+        .bg-primary-600 { background-color: #2563eb; }
+        .text-primary-600 { color: #2563eb; }
+        .text-primary-700 { color: #1d4ed8; }
+        .hover\:bg-primary-50:hover { background-color: #f0f9ff; }
+        .hover\:text-primary-700:hover { color: #1d4ed8; }
+        .focus\:ring-primary-400:focus { --tw-ring-color: rgba(96, 165, 250, var(--tw-ring-opacity)); }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100 flex flex-col">
+    <!-- Top Bar -->
+    <header class="bg-white shadow px-4 py-3 flex items-center justify-between">
+        <!-- Hamburger button (mobile) -->
+        <button id="sidebar-toggle" class="md:hidden text-gray-600 hover:text-gray-900 focus:outline-none">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Search bar or Branding -->
+        <div class="relative w-1/2 max-w-sm hidden md:block">
+            <i class="fas fa-search absolute left-3 top-2 text-gray-400"></i>
+            <input type="search"
+                   class="w-full bg-gray-200 rounded-lg py-2 pl-9 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                   placeholder="Search...">
+        </div>
+
+        <!-- Right icons / Profile -->
+        <div class="flex items-center gap-4">
+            <button class="relative text-gray-600 hover:text-gray-900 focus:outline-none">
+                <i class="fas fa-bell"></i>
+                <span
+                        class="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs w-4 h-4 text-center leading-4">
+                    3
+                </span>
+            </button>
+            <div class="relative group">
+                <button class="flex items-center space-x-2 text-gray-600 hover:text-gray-900 focus:outline-none">
+                    <img class="w-8 h-8 rounded-full"
+                         src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23E0E0E0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='20' fill='%23A0A0A0'%3EA%3C/text%3E%3C/svg%3E"
+                         alt="User avatar">
+                    <span class="hidden md:inline-block font-medium">Admin</span>
+                    <i class="fas fa-chevron-down text-sm"></i>
+                </button>
+                <!-- Profile dropdown -->
+                <div
+                        class="absolute right-0 mt-1 w-48 bg-white shadow-md border rounded-lg py-2 hidden group-hover:block z-10">
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Profile</a>
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Settings</a>
+                    <hr class="my-1">
+                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 text-gray-700">Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main container -->
+    <div class="flex flex-1">
+        <!-- Sidebar -->
+        {% include "includes/sidebar.html" %}
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 overflow-hidden">
+            <!-- Dashboard content here -->
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Dashboard</h2>
+
+            <!-- Example stats cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-white p-4 rounded shadow-sm flex items-center gap-4 hover:shadow-md transition">
+                    <i class="fas fa-users text-4xl text-primary-600"></i>
+                    <div>
+                        <p class="text-gray-500">Users</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ total_users }}</p>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded shadow-sm flex items-center gap-4 hover:shadow-md transition">
+                    <i class="fas fa-file-invoice-dollar text-4xl text-green-600"></i>
+                    <div>
+                        <p class="text-gray-500">Payments</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ total_payments }}</p>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded shadow-sm flex items-center gap-4 hover:shadow-md transition">
+                    <i class="fas fa-chart-line text-4xl text-red-600"></i>
+                    <div>
+                        <p class="text-gray-500">Revenue</p>
+                        <p class="text-2xl font-bold text-gray-800">${{ total_revenue }}</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div><!-- end main container -->
+
+    <!-- Footer -->
+    <footer class="bg-white mt-auto px-4 py-3 shadow-inner text-center text-sm text-gray-500">
+        &copy; 2025 YourApp Admin Panel
+    </footer>
+
+    <script>
+        // Mobile sidebar toggle
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.getElementById('sidebar');
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // Dropdown submenus
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            submenu.classList.toggle('hidden');
+        }
+
+        // Handle inpage.js errors
+        window.addEventListener('error', function(event) {
+            if (event.filename && event.filename.includes('inpage.js')) {
+                console.warn('Ignored inpage.js error:', event.message);
+                event.preventDefault();
+                event.stopPropagation();
+                return true;
+            }
+        }, true);
+
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            if (event.reason && event.reason.stack && event.reason.stack.includes('inpage.js')) {
+                console.warn('Ignored inpage.js promise rejection:', event.reason.message || event.reason);
+                event.preventDefault();
+                event.stopPropagation();
+                return true;
+            }
+        });
+
+        // Add active class to current page in the sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const links = document.querySelectorAll('#sidebar a');
+            
+            links.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('bg-primary-50', 'text-primary-700');
+                }
+            });
+        });
+    </script>
+  <script src="/static/js/error-handler.js"></script>
+</body>
+</html> 

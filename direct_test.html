@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Barcode Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            min-height: 100px;
+        }
+        .barcode-item {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            text-align: center;
+            background-color: white;
+        }
+        img {
+            max-width: 100%;
+            max-height: 200px;
+            margin: 10px 0;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            overflow-x: auto;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .logs {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #333;
+            color: #00ff00;
+            font-family: monospace;
+            border-radius: 4px;
+            font-size: 14px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Direct Barcode Test</h1>
+    <p>This page tests the sequence barcode generation directly with minimal dependencies.</p>
+    
+    <div>
+        <button id="test-btn" onclick="testBarcodeGeneration()">Generate Test Barcode</button>
+        <button id="clear-btn" onclick="clearResults()">Clear Results</button>
+    </div>
+    
+    <div id="result">
+        <p>Results will appear here...</p>
+    </div>
+    
+    <div class="logs" id="logs"></div>
+    
+    <script>
+        // Log function
+        function log(message) {
+            const logs = document.getElementById('logs');
+            const logEntry = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString();
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logs.appendChild(logEntry);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        // Clear results
+        function clearResults() {
+            document.getElementById('result').innerHTML = '<p>Results cleared...</p>';
+            log('Results cleared');
+        }
+        
+        // Test barcode generation
+        async function testBarcodeGeneration() {
+            log('Starting test barcode generation');
+            
+            const resultDiv = document.getElementById('result');
+            const testBtn = document.getElementById('test-btn');
+            
+            // Disable button during test
+            testBtn.disabled = true;
+            
+            try {
+                // Update UI
+                resultDiv.innerHTML = '<p>Generating barcode...</p>';
+                
+                // Make the API request
+                log('Sending API request to generate_sequence endpoint');
+                const response = await fetch('http://127.0.0.1:5000/generate_sequence', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prefix: 'DIRECT',
+                        start: 1,
+                        count: 1,
+                        pad_length: 3,
+                        barcode_type: 'code128',
+                        suffix: '-TEST',
+                        save_to_system: false
+                    })
+                });
+                
+                // Log response status
+                log(`API response status: ${response.status}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                // Parse JSON response
+                const data = await response.json();
+                log('API response received successfully');
+                
+                // Log response structure
+                log(`Response structure: success=${data.success}, count=${data.count}, temp_barcodes=${data.temp_barcodes}`);
+                
+                // Display results
+                if (data.sequence_data && data.sequence_data.length > 0) {
+                    const barcode = data.sequence_data[0];
+                    log(`Barcode data: ${barcode.data}`);
+                    
+                    // Build HTML for display
+                    let html = '<h2>Generated Barcode</h2>';
+                    
+                    // Add the barcode
+                    html += `<div class="barcode-item">
+                        <h3>${barcode.data}</h3>
+                        <img src="${barcode.image_data}" alt="Barcode" />
+                        <p>Type: ${barcode.barcode_type || 'code128'}</p>
+                        <a href="${barcode.image_data}" download="barcode-${barcode.data}.png">Download Barcode</a>
+                    </div>`;
+                    
+                    // Add response details
+                    html += '<h3>API Response Details</h3>';
+                    html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    
+                    // Update the result div
+                    resultDiv.innerHTML = html;
+                    log('Results displayed successfully');
+                } else {
+                    resultDiv.innerHTML = '<p>Error: No barcode data in the response</p>';
+                    log('Error: No sequence_data in the response');
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`);
+                resultDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+            } finally {
+                // Re-enable the button
+                testBtn.disabled = false;
+            }
+        }
+        
+        // Initial log
+        log('Page loaded and ready');
+    </script>
+</body>
+</html> 

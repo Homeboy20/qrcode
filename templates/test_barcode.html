@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .result-container {
+            margin-top: 20px;
+            display: none; 
+        }
+        .barcode-image {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .json-response {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .form-section {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .advanced-options {
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>{{ title }}</h1>
+        
+        <ul class="nav nav-tabs mb-4" id="barcodeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="single-tab" data-bs-toggle="tab" data-bs-target="#single" type="button" role="tab">Single Barcode</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sequence-tab" data-bs-toggle="tab" data-bs-target="#sequence" type="button" role="tab">Sequence</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="batch-tab" data-bs-toggle="tab" data-bs-target="#batch" type="button" role="tab">Batch</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="barcodeTabContent">
+            <!-- Single Barcode Generation -->
+            <div class="tab-pane fade show active" id="single" role="tabpanel">
+                <div class="form-section">
+                    <h3>Generate a Single Barcode</h3>
+                    <form id="barcodeForm">
+                        <div class="mb-3">
+                            <label for="barcodeData" class="form-label">Barcode Data</label>
+                            <input type="text" class="form-control" id="barcodeData" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="barcodeType" class="form-label">Barcode Type</label>
+                            <select class="form-select" id="barcodeType">
+                                {% for type in barcode_types %}
+                                <option value="{{ type }}">{{ type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="isDynamic">
+                            <label class="form-check-label" for="isDynamic">Dynamic Barcode</label>
+                        </div>
+                        
+                        <div class="mb-3" id="redirectUrlField" style="display: none;">
+                            <label for="redirectUrl" class="form-label">Redirect URL</label>
+                            <input type="url" class="form-control" id="redirectUrl">
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" id="generateBarcode">Generate Barcode</button>
+                        <button type="button" class="btn btn-link" id="toggleAdvanced">Show Advanced Options</button>
+                        
+                        <div class="advanced-options" id="advancedOptions">
+                            <div class="mb-3">
+                                <label for="metadataField" class="form-label">Metadata (JSON)</label>
+                                <textarea class="form-control" id="metadataField" rows="3" placeholder='{"key": "value"}'></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="result-container" id="resultContainer">
+                    <h3>Generated Barcode</h3>
+                    <div class="barcode-image" id="barcodeImage"></div>
+                    <div class="mt-3">
+                        <h4>Response</h4>
+                        <pre class="json-response" id="jsonResponse"></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sequence Generation -->
+            <div class="tab-pane fade" id="sequence" role="tabpanel">
+                <div class="form-section">
+                    <h3>Generate a Sequence of Barcodes</h3>
+                    <form id="sequenceForm">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="prefix" class="form-label">Prefix</label>
+                                <input type="text" class="form-control" id="prefix" placeholder="PROD-">
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="startNumber" class="form-label">Start Number</label>
+                                <input type="number" class="form-control" id="startNumber" value="1" min="0">
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="count" class="form-label">Count</label>
+                                <input type="number" class="form-control" id="count" value="10" min="1" max="1000">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="padLength" class="form-label">Zero Padding</label>
+                                <input type="number" class="form-control" id="padLength" value="0" min="0" max="20">
+                                <small class="text-muted">Length to pad numbers with zeros (e.g., 5 → 00005)</small>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="sequenceType" class="form-label">Barcode Type</label>
+                                <select class="form-select" id="sequenceType">
+                                    {% for type in barcode_types %}
+                                    {% if type != 'qrcode' %}
+                                    <option value="{{ type }}">{{ type }}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="suffix" class="form-label">Suffix</label>
+                                <input type="text" class="form-control" id="suffix" placeholder="-END">
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" id="generateSequence">Generate Sequence</button>
+                    </form>
+                </div>
+                
+                <div class="result-container" id="sequenceResultContainer">
+                    <h3>Generated Sequence</h3>
+                    <div class="row" id="sequenceResults"></div>
+                    <div class="mt-3">
+                        <h4>Response</h4>
+                        <pre class="json-response" id="sequenceJsonResponse"></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Batch Generation -->
+            <div class="tab-pane fade" id="batch" role="tabpanel">
+                <div class="form-section">
+                    <h3>Generate Multiple Barcodes in Batch</h3>
+                    <form id="batchForm">
+                        <div class="mb-3">
+                            <label for="batchData" class="form-label">Batch Data (JSON)</label>
+                            <textarea class="form-control" id="batchData" rows="10" required placeholder='[
+  {
+    "data": "123456789012",
+    "barcode_type": "ean13",
+    "is_dynamic": false
+  },
+  {
+    "data": "https://example.com",
+    "barcode_type": "qrcode",
+    "is_dynamic": true,
+    "redirect_url": "https://redirect.example.com"
+  }
+]'></textarea>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" id="generateBatch">Generate Batch</button>
+                        <button type="button" class="btn btn-secondary" id="validateJson">Validate JSON</button>
+                    </form>
+                </div>
+                
+                <div class="result-container" id="batchResultContainer">
+                    <h3>Batch Results</h3>
+                    <div class="row" id="batchResults"></div>
+                    <div class="mt-3">
+                        <h4>Response</h4>
+                        <pre class="json-response" id="batchJsonResponse"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle dynamic redirect URL field
+            document.getElementById('isDynamic').addEventListener('change', function() {
+                document.getElementById('redirectUrlField').style.display = this.checked ? 'block' : 'none';
+            });
+            
+            // Toggle advanced options
+            document.getElementById('toggleAdvanced').addEventListener('click', function() {
+                const advancedOptions = document.getElementById('advancedOptions');
+                if (advancedOptions.style.display === 'block') {
+                    advancedOptions.style.display = 'none';
+                    this.textContent = 'Show Advanced Options';
+                } else {
+                    advancedOptions.style.display = 'block';
+                    this.textContent = 'Hide Advanced Options';
+                }
+            });
+            
+            // Generate single barcode
+            document.getElementById('generateBarcode').addEventListener('click', function() {
+                const barcodeData = document.getElementById('barcodeData').value;
+                const barcodeType = document.getElementById('barcodeType').value;
+                const isDynamic = document.getElementById('isDynamic').checked;
+                const redirectUrl = document.getElementById('redirectUrl').value;
+                let metadata = {};
+                
+                // Parse metadata if provided
+                const metadataField = document.getElementById('metadataField').value;
+                if (metadataField) {
+                    try {
+                        metadata = JSON.parse(metadataField);
+                    } catch(e) {
+                        alert('Invalid metadata JSON format');
+                        return;
+                    }
+                }
+                
+                // Validate required fields
+                if (!barcodeData) {
+                    alert('Barcode data is required');
+                    return;
+                }
+                
+                if (isDynamic && !redirectUrl) {
+                    alert('Redirect URL is required for dynamic barcodes');
+                    return;
+                }
+                
+                // Prepare request data
+                const requestData = {
+                    data: barcodeData,
+                    barcode_type: barcodeType,
+                    is_dynamic: isDynamic,
+                    redirect_url: redirectUrl,
+                    metadata: metadata
+                };
+                
+                // Make the API request
+                fetch(barcodeType === 'qrcode' ? '/generate_qrcode' : '/generate_barcode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Display the results
+                    document.getElementById('resultContainer').style.display = 'block';
+                    document.getElementById('jsonResponse').textContent = JSON.stringify(data, null, 2);
+                    
+                    if (data.success) {
+                        const imgUrl = `/barcode/${data.id}`;
+                        document.getElementById('barcodeImage').innerHTML = `
+                            <img src="${imgUrl}" alt="Generated Barcode" class="img-fluid">
+                            <div class="mt-2">
+                                <a href="${imgUrl}" download class="btn btn-sm btn-success">Download</a>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('barcodeImage').innerHTML = `
+                            <div class="alert alert-danger">
+                                Failed to generate barcode: ${data.error || 'Unknown error'}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('resultContainer').style.display = 'block';
+                    document.getElementById('barcodeImage').innerHTML = `
+                        <div class="alert alert-danger">
+                            Error: ${error.message}
+                        </div>
+                    `;
+                });
+            });
+            
+            // Generate sequence
+            document.getElementById('generateSequence').addEventListener('click', function() {
+                const prefix = document.getElementById('prefix').value;
+                const startNumber = document.getElementById('startNumber').value;
+                const count = document.getElementById('count').value;
+                const padLength = document.getElementById('padLength').value;
+                const barcodeType = document.getElementById('sequenceType').value;
+                const suffix = document.getElementById('suffix').value;
+                
+                // Validate count
+                if (count < 1 || count > 1000) {
+                    alert('Count must be between 1 and 1000');
+                    return;
+                }
+                
+                // Prepare request data
+                const requestData = {
+                    prefix: prefix,
+                    start: startNumber,
+                    count: count,
+                    pad_length: padLength,
+                    barcode_type: barcodeType,
+                    suffix: suffix
+                };
+                
+                // Make the API request
+                fetch('/generate_sequence', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Display the results
+                    document.getElementById('sequenceResultContainer').style.display = 'block';
+                    document.getElementById('sequenceJsonResponse').textContent = JSON.stringify(data, null, 2);
+                    
+                    if (data.success) {
+                        const resultsContainer = document.getElementById('sequenceResults');
+                        resultsContainer.innerHTML = '';
+                        
+                        // Display up to first 9 barcodes
+                        const displayCount = Math.min(9, data.ids.length);
+                        for (let i = 0; i < displayCount; i++) {
+                            const id = data.ids[i];
+                            const imgUrl = `/barcode/${id}`;
+                            
+                            const col = document.createElement('div');
+                            col.className = 'col-md-4 mb-3 text-center';
+                            col.innerHTML = `
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Barcode #${i+1}</h5>
+                                        <img src="${imgUrl}" alt="Barcode ${i+1}" class="img-fluid">
+                                        <div class="mt-2">
+                                            <a href="${imgUrl}" download class="btn btn-sm btn-success">Download</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            resultsContainer.appendChild(col);
+                        }
+                        
+                        if (data.ids.length > displayCount) {
+                            const moreInfo = document.createElement('div');
+                            moreInfo.className = 'col-12 text-center mt-3';
+                            moreInfo.innerHTML = `
+                                <div class="alert alert-info">
+                                    ${data.ids.length - displayCount} more barcodes generated. View all in the Barcodes section.
+                                </div>
+                            `;
+                            resultsContainer.appendChild(moreInfo);
+                        }
+                    } else {
+                        document.getElementById('sequenceResults').innerHTML = `
+                            <div class="col-12">
+                                <div class="alert alert-danger">
+                                    Failed to generate sequence: ${data.error || 'Unknown error'}
+                                </div>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('sequenceResultContainer').style.display = 'block';
+                    document.getElementById('sequenceResults').innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-danger">
+                                Error: ${error.message}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+            
+            // Validate JSON
+            document.getElementById('validateJson').addEventListener('click', function() {
+                const batchData = document.getElementById('batchData').value;
+                try {
+                    JSON.parse(batchData);
+                    alert('Valid JSON format');
+                } catch(e) {
+                    alert('Invalid JSON format: ' + e.message);
+                }
+            });
+            
+            // Generate batch
+            document.getElementById('generateBatch').addEventListener('click', function() {
+                const batchData = document.getElementById('batchData').value;
+                
+                // Validate JSON format
+                let batchItems;
+                try {
+                    batchItems = JSON.parse(batchData);
+                } catch(e) {
+                    alert('Invalid JSON format: ' + e.message);
+                    return;
+                }
+                
+                // Validate batch data structure
+                if (!Array.isArray(batchItems)) {
+                    alert('Batch data must be an array of barcode items');
+                    return;
+                }
+                
+                if (batchItems.length === 0) {
+                    alert('Batch data cannot be empty');
+                    return;
+                }
+                
+                if (batchItems.length > 100) {
+                    alert('Batch size exceeds maximum (100)');
+                    return;
+                }
+                
+                // Prepare request data
+                const requestData = {
+                    items: batchItems
+                };
+                
+                // Make the API request
+                fetch('/batch_generate_barcodes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Display the results
+                    document.getElementById('batchResultContainer').style.display = 'block';
+                    document.getElementById('batchJsonResponse').textContent = JSON.stringify(data, null, 2);
+                    
+                    if (data.success) {
+                        const resultsContainer = document.getElementById('batchResults');
+                        resultsContainer.innerHTML = '';
+                        
+                        // Display up to first 9 barcodes
+                        const displayCount = Math.min(9, data.results.length);
+                        for (let i = 0; i < displayCount; i++) {
+                            const result = data.results[i];
+                            if (result.id) {
+                                const imgUrl = `/barcode/${result.id}`;
+                                
+                                const col = document.createElement('div');
+                                col.className = 'col-md-4 mb-3 text-center';
+                                col.innerHTML = `
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">${result.barcode_type}</h5>
+                                            <p class="card-text small">${result.data}</p>
+                                            <img src="${imgUrl}" alt="Barcode" class="img-fluid">
+                                            <div class="mt-2">
+                                                <a href="${imgUrl}" download class="btn btn-sm btn-success">Download</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                resultsContainer.appendChild(col);
+                            }
+                        }
+                        
+                        if (data.results.length > displayCount) {
+                            const moreInfo = document.createElement('div');
+                            moreInfo.className = 'col-12 text-center mt-3';
+                            moreInfo.innerHTML = `
+                                <div class="alert alert-info">
+                                    ${data.results.length - displayCount} more barcodes generated. View all in the Barcodes section.
+                                </div>
+                            `;
+                            resultsContainer.appendChild(moreInfo);
+                        }
+                        
+                        if (data.failed_count > 0) {
+                            const failedInfo = document.createElement('div');
+                            failedInfo.className = 'col-12 mt-3';
+                            failedInfo.innerHTML = `
+                                <div class="alert alert-warning">
+                                    <h5>Failed Items (${data.failed_count})</h5>
+                                    <pre>${JSON.stringify(data.failed_items, null, 2)}</pre>
+                                </div>
+                            `;
+                            resultsContainer.appendChild(failedInfo);
+                        }
+                    } else {
+                        document.getElementById('batchResults').innerHTML = `
+                            <div class="col-12">
+                                <div class="alert alert-danger">
+                                    Failed to generate batch: ${data.error || 'Unknown error'}
+                                </div>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('batchResultContainer').style.display = 'block';
+                    document.getElementById('batchResults').innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-danger">
+                                Error: ${error.message}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
